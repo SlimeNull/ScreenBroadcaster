@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="Spectre.Console" Version="0.49.1" />
+    <PackageReference Include="Spectre.Console.ImageSharp" Version="0.49.1" />
   </ItemGroup>
 
   <ItemGroup>

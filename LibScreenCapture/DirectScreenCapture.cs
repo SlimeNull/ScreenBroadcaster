@@ -16,6 +16,7 @@ namespace LibScreenCapture
 
         private readonly Texture2D _screenTexture;
         private readonly nint _dataPointer;
+        private readonly OutputDuplication _duplicatedOutput;
         private readonly nuint _dataByteCount;
         private readonly int _pixelBytes;
         private readonly int _stride;
@@ -61,14 +62,14 @@ namespace LibScreenCapture
             _stride = _output.Description.DesktopBounds.Right * _pixelBytes;
             _dataByteCount = (nuint)(_stride * _output.Description.DesktopBounds.Bottom);
             _dataPointer = (nint)NativeMemory.Alloc(_dataByteCount);
+            _duplicatedOutput = _output1.DuplicateOutput(_device);
         }
 
         public bool Capture() => Capture(default);
 
         public unsafe bool Capture(TimeSpan timeout)
         {
-            using var duplicatedOutput = _output1.DuplicateOutput(_device);
-            var result = duplicatedOutput.TryAcquireNextFrame((int)timeout.TotalMilliseconds, out var frameInfo, out var screenResource);
+            var result = _duplicatedOutput.TryAcquireNextFrame((int)timeout.TotalMilliseconds, out var frameInfo, out var screenResource);
 
             if (!result.Success)
                 return false;
@@ -87,7 +88,7 @@ namespace LibScreenCapture
             _device.ImmediateContext.UnmapSubresource(_screenTexture, 0);
 
             screenResource.Dispose();
-            duplicatedOutput.ReleaseFrame();
+            _duplicatedOutput.ReleaseFrame();
 
             return true;
         }

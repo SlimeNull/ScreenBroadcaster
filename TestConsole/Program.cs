@@ -1,12 +1,13 @@
 ﻿using System.Runtime.InteropServices;
 using LibScreenCapture;
 using SkiaSharp;
+using Spectre.Console;
 
 IScreenCapture capture = new DirectScreenCapture(0);
 
 for (int i = 0; ; i++)
 {
-    bool ok = capture.Capture(TimeSpan.FromSeconds(0.1f));
+    bool ok = capture.Capture(TimeSpan.FromSeconds(1f));
 
     SKBitmap bitmap = new SKBitmap(capture.Width, capture.Height, SKColorType.Bgra8888, SKAlphaType.Opaque);
     var bitmapPixelsPtr = bitmap.GetPixels();
@@ -19,10 +20,12 @@ for (int i = 0; ; i++)
         }
     }
 
-    using var output = File.Create($"output{i}.png");
-    bitmap.Encode(output, SKEncodedImageFormat.Png, 0);
+    //using var output = File.Create($"output{i}.png");
 
-    // See https://aka.ms/new-console-template for more information
-    Console.WriteLine($"Capture ok: {ok}");
+    var image = new CanvasImage(bitmap.Encode(SKEncodedImageFormat.Jpeg, 20).AsStream());
+    Console.SetCursorPosition(0, 0);
+    AnsiConsole.Write(image);
+
+    Console.WriteLine($"Capture ok: {ok}, Index: {i}");
 }
 
