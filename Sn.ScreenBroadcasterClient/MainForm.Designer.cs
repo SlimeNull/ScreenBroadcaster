@@ -1,6 +1,6 @@
 ﻿namespace Sn.ScreenBroadcasterClient
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         ///  Required designer variable.
@@ -28,12 +28,32 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form1";
+            paintControl = new EmptyControl();
+            SuspendLayout();
+            // 
+            // emptyControl1
+            // 
+            paintControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            paintControl.Location = new Point(12, 12);
+            paintControl.Name = "emptyControl1";
+            paintControl.Size = new Size(776, 377);
+            paintControl.TabIndex = 0;
+            paintControl.Text = "emptyControl1";
+            // 
+            // MainForm
+            // 
+            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(800, 450);
+            Controls.Add(paintControl);
+            Name = "MainForm";
+            Text = "Form1";
+            Load += MainForm_Load;
+            ResumeLayout(false);
         }
 
         #endregion
+
+        private EmptyControl paintControl;
     }
 }
