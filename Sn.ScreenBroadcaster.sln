@@ -3,15 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sn.ScreenBroadcaster", "Sn.ScreenBroadcaster\Sn.ScreenBroadcaster.csproj", "{4F3B7D52-C33E-48C8-9E12-9B68F29EB6DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sn.ScreenBroadcaster", "Sn.ScreenBroadcaster\Sn.ScreenBroadcaster.csproj", "{4F3B7D52-C33E-48C8-9E12-9B68F29EB6DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sn.ScreenBroadcasterClient", "Sn.ScreenBroadcasterClient\Sn.ScreenBroadcasterClient.csproj", "{957DCCBF-66D4-418C-9A97-6EC63862E7FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sn.ScreenBroadcasterClient", "Sn.ScreenBroadcasterClient\Sn.ScreenBroadcasterClient.csproj", "{957DCCBF-66D4-418C-9A97-6EC63862E7FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibScreenCapture", "LibScreenCapture\LibScreenCapture.csproj", "{3415B788-7FD4-4B55-B4AA-1E832DD4776C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibScreenCapture", "LibScreenCapture\LibScreenCapture.csproj", "{3415B788-7FD4-4B55-B4AA-1E832DD4776C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{E234355E-BD64-4157-BE5F-EE1AF0B6BB6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\TestConsole.csproj", "{E234355E-BD64-4157-BE5F-EE1AF0B6BB6C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibCommon", "LibCommon\LibCommon.csproj", "{5F4AA9BA-7C40-4D1E-8DB5-75CAEA5591EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibCommon", "LibCommon\LibCommon.csproj", "{5F4AA9BA-7C40-4D1E-8DB5-75CAEA5591EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServer", "TestServer\TestServer.csproj", "{60C4293A-85C6-403C-9D32-43E1E0BA70FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{5F4AA9BA-7C40-4D1E-8DB5-75CAEA5591EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F4AA9BA-7C40-4D1E-8DB5-75CAEA5591EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F4AA9BA-7C40-4D1E-8DB5-75CAEA5591EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
