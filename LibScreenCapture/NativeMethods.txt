@@ -1,0 +1,15 @@
+﻿GetDesktopWindow
+GetDC
+DeleteDC
+ReleaseDC
+CreateCompatibleDC
+CreateCompatibleBitmap
+CreateDIBSection
+SelectObject
+DeleteObject
+BitBlt
+PrintWindow
+GetWindowRect
+GetClientRect
+GetDeviceCaps
+BI_*
