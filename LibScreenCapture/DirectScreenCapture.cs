@@ -111,6 +111,7 @@ namespace LibScreenCapture
                 _output1.Dispose();
                 _output.Dispose();
                 _screenTexture.Dispose();
+                _duplicatedOutput.Dispose();
 
                 NativeMemory.Free((void*)_dataPointer);
 
