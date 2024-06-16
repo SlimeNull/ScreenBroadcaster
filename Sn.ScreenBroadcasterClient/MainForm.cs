@@ -17,9 +17,10 @@ namespace Sn.ScreenBroadcasterClient
         TcpClient _client = new();
         Frame frame = new Frame();
 
-        ConcurrentQueue<List<byte[]>> packetBytes = new();
+        ConcurrentQueue<FramePackets> framePacketBytes = new();
+        FramePackets? lastKeyFrame = default;
 
-        CodecContext _codecContext = new(Codec.FindDecoderById(AVCodecID.H264))
+        CodecContext _codecContext = new(FFmpegUtilities.FindBestDecoder(AVCodecID.H264))
         {
             Width = 2560,
             Height = 1440,
@@ -42,12 +43,16 @@ namespace Sn.ScreenBroadcasterClient
 
                 var networkStream = _client.GetStream();
                 var framePacketCountBytes = new byte[4];
+                var frameIsKeyFrameBytes = new byte[4];
                 var packetSizeBytes = new byte[4];
 
                 while (true)
                 {
                     await networkStream.ReadBlockAsync(framePacketCountBytes, 0, 4);
+                    await networkStream.ReadBlockAsync(frameIsKeyFrameBytes, 0, 4);
+
                     var framePacketCount = BitConverter.ToInt32(framePacketCountBytes);
+                    var frameIsKeyFrame = BitConverter.ToInt32(frameIsKeyFrameBytes);
 
                     List<byte[]> framePacketBytes = new();
                     for (int i = 0; i < framePacketCount; i++)
@@ -60,7 +65,13 @@ namespace Sn.ScreenBroadcasterClient
                         framePacketBytes.Add(body);
                     }
 
-                    packetBytes.Enqueue(framePacketBytes);
+                    var currentFramePackets = new FramePackets(frameIsKeyFrame != 0, framePacketBytes);
+                    this.framePacketBytes.Enqueue(currentFramePackets);
+
+                    if (currentFramePackets.IsKeyFrame)
+                    {
+                        lastKeyFrame = currentFramePackets;
+                    }
                 }
             });
 
@@ -76,14 +87,26 @@ namespace Sn.ScreenBroadcasterClient
 
                 while (true)
                 {
-                    if (this.packetBytes.Count > 5)
+                    while (this.framePacketBytes.Count > 5 &&
+                        this.framePacketBytes.Where(frame => frame.IsKeyFrame).Count() > 1)
                     {
-                        this.packetBytes.TryDequeue(out _);
+                        if (!this.framePacketBytes.TryPeek(out var peeked))
+                            continue;
+                        if (peeked == lastKeyFrame)
+                            break;
+
+                        this.framePacketBytes.TryDequeue(out _);
+                        Console.WriteLine("Drop frame");
                     }
 
-                    if (this.packetBytes.TryDequeue(out var framePacketBytes))
+                    if (this.framePacketBytes.TryDequeue(out var framePacketBytes))
                     {
-                        foreach (var packetBytes in framePacketBytes)
+                        if (framePacketBytes == lastKeyFrame)
+                        {
+                            lastKeyFrame = null;
+                        }
+
+                        foreach (var packetBytes in framePacketBytes.PacketsBytes)
                         {
                             unsafe
                             {

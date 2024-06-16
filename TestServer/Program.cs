@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using LibCommon;
 using LibScreenCapture;
 using Sdcb.FFmpeg.Codecs;
 using Sdcb.FFmpeg.Raw;
@@ -19,17 +20,18 @@ TcpListener listener = new TcpListener(new IPEndPoint(IPAddress.Loopback, 7777))
 List<TcpClient> clients = new List<TcpClient>();
 
 // encoding
-ConcurrentQueue<List<byte[]>> framePacketQueue = new();
-List<byte[]>? lastKeyFramePacketBytes = null;
+ConcurrentQueue<FramePackets> framePacketQueue = new();
+FramePackets? lastKeyFramePackets = null;
 
 // init encoding
-using CodecContext videoEncoder = new CodecContext(Codec.CommonEncoders.Libx264)
+using CodecContext videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncoder(AVCodecID.H264))
 {
     Width = capture.Width,
     Height = capture.Height,
     Framerate = new AVRational(1, 30),
     TimeBase = new AVRational(1, 30),
     PixelFormat = AVPixelFormat.Yuv420p,
+    GopSize = 20
     //BitRate = 80000
 };
 
@@ -54,18 +56,22 @@ var networkTask = Task.Run(async () =>
 
         lock (clients)
         {
-            while (lastKeyFramePacketBytes is null)
+            while (lastKeyFramePackets is null)
             {
                 Thread.Sleep(1);
             }
 
             var clientStream = newClient.GetStream();
-            var framePacketCount = lastKeyFramePacketBytes.Count;
+            var framePacketCount = lastKeyFramePackets.Value.PacketsBytes.Count;
+            var frameIsKeyFrame = 1;
+
             var framePacketCountBytes = BitConverter.GetBytes(framePacketCount);
+            var frameIsKeyFrameBytes = BitConverter.GetBytes(frameIsKeyFrame);
 
             clientStream.Write(framePacketCountBytes);
+            clientStream.Write(frameIsKeyFrameBytes);
 
-            foreach (var packetBytes in lastKeyFramePacketBytes)
+            foreach (var packetBytes in lastKeyFramePackets.Value.PacketsBytes)
             {
                 var packetSizeBytes = BitConverter.GetBytes(packetBytes.Length);
 
@@ -128,12 +134,12 @@ var captureTask = Task.Run(() =>
 
         if (isKeyFrame)
         {
-            lastKeyFramePacketBytes = framePacketBytes;
+            lastKeyFramePackets = new FramePackets(true, framePacketBytes);
         }
 
         if (framePacketBytes.Count != 0)
         {
-            framePacketQueue.Enqueue(framePacketBytes);
+            framePacketQueue.Enqueue(new FramePackets(isKeyFrame, framePacketBytes));
         }
 
         captureCounter++;
@@ -149,35 +155,40 @@ var broadcastTask = Task.Run(() =>
         while (framePacketQueue.Count > 5)
         {
             framePacketQueue.TryDequeue(out _);
+            Console.WriteLine("Drop frame");
         }
 
         lock (clients)
         {
             while (framePacketQueue.TryDequeue(out var framePacketBytes))
             {
-                var framePacketCount = framePacketBytes.Count;
+                var framePacketCount = framePacketBytes.PacketsBytes.Count;
+                var frameIsKeyFrame = framePacketBytes.IsKeyFrame ? 1 : 0;
+
                 var framePacketCountBytes = BitConverter.GetBytes(framePacketCount);
+                var frameIsKeyFrameBytes = BitConverter.GetBytes(frameIsKeyFrame);
+
+                foreach (var client in clients)
                 {
-                    foreach (var client in clients)
+                    var clientStream = client.GetStream();
+
+                    clientStream.Write(framePacketCountBytes);
+                    clientStream.Write(frameIsKeyFrameBytes);
+
+                    foreach (var packetBytes in framePacketBytes.PacketsBytes)
                     {
-                        var clientStream = client.GetStream();
-
-                        clientStream.Write(framePacketCountBytes);
-                        foreach (var packetBytes in framePacketBytes)
+                        try
                         {
-                            try
-                            {
-                                var packetSizeBytes = BitConverter.GetBytes(packetBytes.Length);
+                            var packetSizeBytes = BitConverter.GetBytes(packetBytes.Length);
 
-                                clientStream.Write(packetSizeBytes);
-                                clientStream.Write(packetBytes);
+                            clientStream.Write(packetSizeBytes);
+                            clientStream.Write(packetBytes);
 
-                                Console.WriteLine("Frame sent to client");
-                            }
-                            catch
-                            {
-                                clientsToRemove.Add(client);
-                            }
+                            Console.WriteLine("Frame sent to client");
+                        }
+                        catch
+                        {
+                            clientsToRemove.Add(client);
                         }
                     }
                 }
