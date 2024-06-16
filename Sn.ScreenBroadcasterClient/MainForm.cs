@@ -9,7 +9,6 @@ using Sdcb.FFmpeg.Codecs;
 using Sdcb.FFmpeg.Raw;
 using Sdcb.FFmpeg.Swscales;
 using Sdcb.FFmpeg.Utils;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 
 namespace Sn.ScreenBroadcasterClient
 {

@@ -12,7 +12,7 @@ using SkiaSharp;
 using Spectre.Console;
 
 // capture
-IScreenCapture capture = new GdiScreenCapture();
+IScreenCapture capture = new DirectScreenCapture(0);
 
 // network
 TcpListener listener = new TcpListener(new IPEndPoint(IPAddress.Loopback, 7777));
@@ -36,6 +36,7 @@ using CodecContext videoEncoder = new CodecContext(Codec.CommonEncoders.Libx264)
 videoEncoder.Open(null);
 
 using Frame bgraFrame = new Frame();
+using Frame yuvFrame = new Frame();
 using Packet packetRef = new Packet();
 using VideoFrameConverter videoFrameConverter = new();
 
@@ -92,7 +93,9 @@ var captureTask = Task.Run(() =>
         bgraFrame.Linesize[0] = capture.Stride;
         bgraFrame.Pts = pts++;
 
-        using Frame yuvFrame = videoEncoder.CreateFrame();
+        yuvFrame.Width = videoEncoder.Width;
+        yuvFrame.Height = videoEncoder.Height;
+        yuvFrame.Format = (int)videoEncoder.PixelFormat;
 
         yuvFrame.EnsureBuffer();
         yuvFrame.MakeWritable();
@@ -150,7 +153,7 @@ var broadcastTask = Task.Run(() =>
 
         lock (clients)
         {
-            if (framePacketQueue.TryDequeue(out var framePacketBytes))
+            while (framePacketQueue.TryDequeue(out var framePacketBytes))
             {
                 var framePacketCount = framePacketBytes.Count;
                 var framePacketCountBytes = BitConverter.GetBytes(framePacketCount);
