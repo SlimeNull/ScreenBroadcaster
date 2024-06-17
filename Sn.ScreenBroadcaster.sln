@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibCommon", "LibCommon\LibCommon.csproj", "{5F4AA9BA-7C40-4D1E-8DB5-75CAEA5591EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServer", "TestServer\TestServer.csproj", "{60C4293A-85C6-403C-9D32-43E1E0BA70FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServer", "TestServer\TestServer.csproj", "{60C4293A-85C6-403C-9D32-43E1E0BA70FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestForm", "TestForm\TestForm.csproj", "{DC60C096-DCD0-40CC-8195-402E5A667290}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC60C096-DCD0-40CC-8195-402E5A667290}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC60C096-DCD0-40CC-8195-402E5A667290}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC60C096-DCD0-40CC-8195-402E5A667290}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC60C096-DCD0-40CC-8195-402E5A667290}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

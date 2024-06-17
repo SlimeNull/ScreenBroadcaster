@@ -32,7 +32,7 @@ using CodecContext videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncod
     Framerate = new AVRational(1, 30),
     TimeBase = new AVRational(1, 30),
     PixelFormat = AVPixelFormat.Yuv420p,
-    GopSize = 20,
+    GopSize = 10,
     //BitRate = 80000
 };
 
