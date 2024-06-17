@@ -81,13 +81,16 @@ namespace Sn.ScreenBroadcasterClient
 
                 var isDecoder = _codecContext.Codec.IsDecoder;
                 var graphics = paintControl.CreateGraphics();
+                var bufferedGraphics = BufferedGraphicsManager.Current.Allocate(graphics, paintControl.ClientRectangle);
 
                 var bitmap = default(Bitmap);
                 var videoFrameConverter = new VideoFrameConverter();
 
+                var dropFrameCounter = 1;
+
                 while (true)
                 {
-                    while (this.framePacketBytes.Count > 5 &&
+                    while (this.framePacketBytes.Count > 10 &&
                         this.framePacketBytes.Where(frame => frame.IsKeyFrame).Count() > 1)
                     {
                         if (!this.framePacketBytes.TryPeek(out var peeked))
@@ -96,7 +99,9 @@ namespace Sn.ScreenBroadcasterClient
                             break;
 
                         this.framePacketBytes.TryDequeue(out _);
-                        Console.WriteLine("Drop frame");
+                        Console.WriteLine($"Drop frame. {dropFrameCounter}");
+
+                        dropFrameCounter++;
                     }
 
                     if (this.framePacketBytes.TryDequeue(out var framePacketBytes))
@@ -162,9 +167,12 @@ namespace Sn.ScreenBroadcasterClient
 
                                     bitmap.UnlockBits(bmpData);
 
+                                    LayoutUtilities.Uniform(paintControl.Width, paintControl.Height, bitmap.Width, bitmap.Height, out var imgX, out var imgY, out var imgActualWidth, out var imgActualHeight);
+                                    bufferedGraphics.Graphics.DrawImage(bitmap, imgX, imgY, imgActualWidth, imgActualHeight);
+
                                     Invoke(() =>
                                     {
-                                        graphics.DrawImage(bitmap, default(Point));
+                                        bufferedGraphics.Render();
                                     });
                                 }
                             }

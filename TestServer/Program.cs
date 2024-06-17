@@ -31,11 +31,15 @@ using CodecContext videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncod
     Framerate = new AVRational(1, 30),
     TimeBase = new AVRational(1, 30),
     PixelFormat = AVPixelFormat.Yuv420p,
-    GopSize = 20
+    GopSize = 20,
     //BitRate = 80000
 };
 
-videoEncoder.Open(null);
+videoEncoder.Open(null, new MediaDictionary
+{
+    ["preset"] = "fast",
+    ["tune"] = "ull",
+});
 
 using Frame bgraFrame = new Frame();
 using Frame yuvFrame = new Frame();
@@ -160,7 +164,7 @@ var broadcastTask = Task.Run(() =>
 
         lock (clients)
         {
-            while (framePacketQueue.TryDequeue(out var framePacketBytes))
+            if (framePacketQueue.TryDequeue(out var framePacketBytes))
             {
                 var framePacketCount = framePacketBytes.PacketsBytes.Count;
                 var frameIsKeyFrame = framePacketBytes.IsKeyFrame ? 1 : 0;
@@ -184,7 +188,7 @@ var broadcastTask = Task.Run(() =>
                             clientStream.Write(packetSizeBytes);
                             clientStream.Write(packetBytes);
 
-                            Console.WriteLine("Frame sent to client");
+                            Console.WriteLine($"Frame sent to client. {framePacketQueue.Count} remains.");
                         }
                         catch
                         {
