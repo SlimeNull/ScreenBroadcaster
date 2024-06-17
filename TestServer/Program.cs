@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -20,8 +21,8 @@ TcpListener listener = new TcpListener(new IPEndPoint(IPAddress.Loopback, 7777))
 List<TcpClient> clients = new List<TcpClient>();
 
 // encoding
-ConcurrentQueue<FramePackets> framePacketQueue = new();
-FramePackets? lastKeyFramePackets = null;
+ConcurrentQueue<FrameData> framePacketQueue = new();
+FrameData? lastKeyFramePackets = null;
 
 // init encoding
 using CodecContext videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncoder(AVCodecID.H264))
@@ -66,16 +67,20 @@ var networkTask = Task.Run(async () =>
             }
 
             var clientStream = newClient.GetStream();
-            var framePacketCount = lastKeyFramePackets.Value.PacketsBytes.Count;
-            var frameIsKeyFrame = 1;
 
+            var timestamp = lastKeyFramePackets.Value.Timestamp;
+            var frameIsKeyFrame = 1;
+            var framePacketCount = lastKeyFramePackets.Value.Packets.Count;
+
+            var frameTimestampBytes = BitConverter.GetBytes(timestamp);
             var framePacketCountBytes = BitConverter.GetBytes(framePacketCount);
             var frameIsKeyFrameBytes = BitConverter.GetBytes(frameIsKeyFrame);
 
-            clientStream.Write(framePacketCountBytes);
+            clientStream.Write(frameTimestampBytes);
             clientStream.Write(frameIsKeyFrameBytes);
+            clientStream.Write(framePacketCountBytes);
 
-            foreach (var packetBytes in lastKeyFramePackets.Value.PacketsBytes)
+            foreach (var packetBytes in lastKeyFramePackets.Value.Packets)
             {
                 var packetSizeBytes = BitConverter.GetBytes(packetBytes.Length);
 
@@ -90,12 +95,20 @@ var networkTask = Task.Run(async () =>
 
 var captureTask = Task.Run(() =>
 {
-    int pts = 0;
+    var pts = 0;
+    var stopwatch = new Stopwatch();
 
     while (true)
     {
+        stopwatch.Restart();
         capture.Capture(TimeSpan.FromSeconds(0.1));
+        stopwatch.Stop();
 
+        var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+        Console.WriteLine($"Captured. Elapsed: {stopwatch.ElapsedMilliseconds}ms");
+
+        stopwatch.Restart();
         bgraFrame.Width = capture.Width;
         bgraFrame.Height = capture.Height;
         bgraFrame.Format = (int)AVPixelFormat.Bgra;
@@ -136,14 +149,17 @@ var captureTask = Task.Run(() =>
             }
         }
 
+        stopwatch.Stop();
+        Console.WriteLine($"Frame encoded. Elapsed: {stopwatch.ElapsedMilliseconds}ms");
+
         if (isKeyFrame)
         {
-            lastKeyFramePackets = new FramePackets(true, framePacketBytes);
+            lastKeyFramePackets = new FrameData(timestamp, true, framePacketBytes);
         }
 
         if (framePacketBytes.Count != 0)
         {
-            framePacketQueue.Enqueue(new FramePackets(isKeyFrame, framePacketBytes));
+            framePacketQueue.Enqueue(new FrameData(timestamp, isKeyFrame, framePacketBytes));
         }
 
         captureCounter++;
@@ -164,22 +180,25 @@ var broadcastTask = Task.Run(() =>
 
         lock (clients)
         {
-            if (framePacketQueue.TryDequeue(out var framePacketBytes))
+            if (framePacketQueue.TryDequeue(out var frameData))
             {
-                var framePacketCount = framePacketBytes.PacketsBytes.Count;
-                var frameIsKeyFrame = framePacketBytes.IsKeyFrame ? 1 : 0;
+                var timestamp = frameData.Timestamp;
+                var framePacketCount = frameData.Packets.Count;
+                var frameIsKeyFrame = frameData.IsKeyFrame ? 1 : 0;
 
-                var framePacketCountBytes = BitConverter.GetBytes(framePacketCount);
+                var frameTimestampBytes = BitConverter.GetBytes(timestamp);
                 var frameIsKeyFrameBytes = BitConverter.GetBytes(frameIsKeyFrame);
+                var framePacketCountBytes = BitConverter.GetBytes(framePacketCount);
 
                 foreach (var client in clients)
                 {
                     var clientStream = client.GetStream();
 
-                    clientStream.Write(framePacketCountBytes);
+                    clientStream.Write(frameTimestampBytes);
                     clientStream.Write(frameIsKeyFrameBytes);
+                    clientStream.Write(framePacketCountBytes);
 
-                    foreach (var packetBytes in framePacketBytes.PacketsBytes)
+                    foreach (var packetBytes in frameData.Packets)
                     {
                         try
                         {
@@ -196,6 +215,8 @@ var broadcastTask = Task.Run(() =>
                         }
                     }
                 }
+
+                broadcastCounter++;
             }
 
 
@@ -204,8 +225,6 @@ var broadcastTask = Task.Run(() =>
                 clients.Remove(client);
             }
         }
-
-        broadcastCounter++;
     }
 });
 

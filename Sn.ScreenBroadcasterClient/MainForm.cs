@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
@@ -17,17 +18,14 @@ namespace Sn.ScreenBroadcasterClient
         TcpClient _client = new();
         Frame frame = new Frame();
 
-        ConcurrentQueue<FramePackets> framePacketBytes = new();
-        FramePackets? lastKeyFrame = default;
+        ConcurrentQueue<FrameData> framePacketBytes = new();
+        FrameData? lastKeyFrame = default;
 
         CodecContext _codecContext = new(FFmpegUtilities.FindBestDecoder(AVCodecID.H264))
         {
             Width = 2560,
             Height = 1440,
-            Framerate = new AVRational(1, 30),
-            TimeBase = new AVRational(1, 30),
             PixelFormat = AVPixelFormat.Yuv420p,
-            BitRate = 8000000
         };
 
         public MainForm()
@@ -42,15 +40,18 @@ namespace Sn.ScreenBroadcasterClient
                 _client.Connect(new IPEndPoint(IPAddress.Loopback, 7777));
 
                 var networkStream = _client.GetStream();
-                var framePacketCountBytes = new byte[4];
+                var frameTimestampBytes = new byte[8];
                 var frameIsKeyFrameBytes = new byte[4];
+                var framePacketCountBytes = new byte[4];
                 var packetSizeBytes = new byte[4];
 
                 while (true)
                 {
-                    await networkStream.ReadBlockAsync(framePacketCountBytes, 0, 4);
+                    await networkStream.ReadBlockAsync(frameTimestampBytes, 0, 8);
                     await networkStream.ReadBlockAsync(frameIsKeyFrameBytes, 0, 4);
+                    await networkStream.ReadBlockAsync(framePacketCountBytes, 0, 4);
 
+                    var timestamp = BitConverter.ToInt64(frameTimestampBytes);
                     var framePacketCount = BitConverter.ToInt32(framePacketCountBytes);
                     var frameIsKeyFrame = BitConverter.ToInt32(frameIsKeyFrameBytes);
 
@@ -65,7 +66,10 @@ namespace Sn.ScreenBroadcasterClient
                         framePacketBytes.Add(body);
                     }
 
-                    var currentFramePackets = new FramePackets(frameIsKeyFrame != 0, framePacketBytes);
+                    var nowTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    await Console.Out.WriteLineAsync($"Received frame. Latency from capture: {nowTimestamp - timestamp}ms");
+
+                    var currentFramePackets = new FrameData(timestamp, frameIsKeyFrame != 0, framePacketBytes);
                     this.framePacketBytes.Enqueue(currentFramePackets);
 
                     if (currentFramePackets.IsKeyFrame)
@@ -104,14 +108,14 @@ namespace Sn.ScreenBroadcasterClient
                         dropFrameCounter++;
                     }
 
-                    if (this.framePacketBytes.TryDequeue(out var framePacketBytes))
+                    if (this.framePacketBytes.TryDequeue(out var frameData))
                     {
-                        if (framePacketBytes == lastKeyFrame)
+                        if (frameData == lastKeyFrame)
                         {
                             lastKeyFrame = null;
                         }
 
-                        foreach (var packetBytes in framePacketBytes.PacketsBytes)
+                        foreach (var packetBytes in frameData.Packets)
                         {
                             unsafe
                             {
@@ -144,6 +148,11 @@ namespace Sn.ScreenBroadcasterClient
                                     convertedFrame.EnsureBuffer();
                                     convertedFrame.MakeWritable();
                                     videoFrameConverter.ConvertFrame(frame, convertedFrame);
+
+                                    var nowTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                                    Console.WriteLine($"Frame Decoded. Latency from captured: {nowTimestamp - frameData.Timestamp}ms");
+
+
                                     if (bitmap == null ||
                                         bitmap.Width != frame.Width ||
                                         bitmap.Height != frame.Height)
@@ -169,11 +178,10 @@ namespace Sn.ScreenBroadcasterClient
 
                                     LayoutUtilities.Uniform(paintControl.Width, paintControl.Height, bitmap.Width, bitmap.Height, out var imgX, out var imgY, out var imgActualWidth, out var imgActualHeight);
                                     bufferedGraphics.Graphics.DrawImage(bitmap, imgX, imgY, imgActualWidth, imgActualHeight);
+                                    bufferedGraphics.Render();
 
-                                    Invoke(() =>
-                                    {
-                                        bufferedGraphics.Render();
-                                    });
+                                    nowTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                                    Console.WriteLine($"Frame drawn. Latency from captured: {nowTimestamp - frameData.Timestamp}ms");
                                 }
                             }
                             while (result == CodecResult.Success);
