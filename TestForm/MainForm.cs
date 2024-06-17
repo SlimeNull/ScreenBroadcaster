@@ -50,7 +50,6 @@ namespace TestForm
             var rgbFrame = new Frame();
             var yuvFrame = new Frame();
             var yuvFrameForDecoding = new Frame();
-            var rgbFrameForDecoding = new Frame();
             var packetRef = new Packet();
             var videoFrameConverter = new VideoFrameConverter();
 
@@ -86,12 +85,13 @@ namespace TestForm
                     foreach (var packet in _videoEncoder.EncodeFrame(yuvFrame, packetRef))
                     {
                         _videoDecoder.SendPacket(packet);
-                        
+
                         var decodeResult = _videoDecoder.ReceiveFrame(yuvFrameForDecoding);
                         if (decodeResult == CodecResult.Success)
                         {
-                            rgbFrameForDecoding.Width = _screenCapture.Width;
-                            rgbFrameForDecoding.Height = _screenCapture.Height;
+                            using var rgbFrameForDecoding = new Frame();
+                            rgbFrameForDecoding.Width = yuvFrameForDecoding.Width;
+                            rgbFrameForDecoding.Height = yuvFrameForDecoding.Height;
                             rgbFrameForDecoding.Format = (int)AVPixelFormat.Bgra;
 
                             rgbFrameForDecoding.EnsureBuffer();
