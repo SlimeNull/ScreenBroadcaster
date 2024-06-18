@@ -1,0 +1,104 @@
+﻿<Window x:Class="Sn.ScreenBroadcaster.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Sn.ScreenBroadcaster"
+        xmlns:ws="https://schemas.elecho.dev/wpfsuite"
+        mc:Ignorable="d"
+        Title="MainWindow"
+        Height="700"
+        Width="550"
+        d:DataContext="{d:DesignInstance Type=local:MainWindow}">
+
+    <ws:ScrollViewer>
+        <ws:StackPanel Spacing="8"
+                       Margin="24">
+            <ws:GroupBox Header="General"
+                         Padding="8">
+                <ws:StackPanel Spacing="8">
+                    <StackPanel>
+                        <TextBlock Text="Adress: " />
+                        <ws:TextBox Text="{Binding Address}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Port: " />
+                        <ws:TextBox Text="{Binding Port}" />
+                    </StackPanel>
+                    <ws:StackPanel Orientation="Horizontal"
+                                   Spacing="8">
+                        <ws:StackPanel.Resources>
+                            <Style TargetType="ws:Button"
+                                   BasedOn="{StaticResource ResourceKey={x:Type ws:Button}}">
+                                <Setter Property="Padding" Value="8 4"/>
+                            </Style>
+                        </ws:StackPanel.Resources>
+                        <ws:Button Content="Start" Command="{Binding StartCommand}" />
+                        <ws:Button Content="Stop" Command="{Binding StopCommand}" />
+                    </ws:StackPanel>
+                </ws:StackPanel>
+            </ws:GroupBox>
+
+            <ws:GroupBox Header="Capturing"
+                         Padding="8">
+                <ws:StackPanel Spacing="8">
+                    <StackPanel>
+                        <TextBlock Text="Capture Method: " />
+                        <ws:ComboBox ItemsSource="{Binding AvailableCaptureMethodList}"
+                                     SelectedItem="{Binding CaptureMethod}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Display Index: " />
+                        <ws:TextBox Text="{Binding DisplayIndex}" />
+                    </StackPanel>
+                </ws:StackPanel>
+            </ws:GroupBox>
+            
+            <ws:GroupBox Header="Encoding"
+                         Padding="8">
+                <ws:StackPanel Spacing="8">
+                    <StackPanel>
+                        <TextBlock Text="Width: " />
+                        <ws:TextBox Text="{Binding FrameWidth}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Height: " />
+                        <ws:TextBox Text="{Binding FrameHeight}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Max Frame Rate: " />
+                        <ws:TextBox Text="{Binding MaxFrameRate}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="BitRate: " />
+                        <ws:TextBox Text="{Binding BitRate}" />
+                    </StackPanel>
+                    <StackPanel >
+                        <TextBlock Text="Codec: " />
+                        <ws:ComboBox ItemsSource="{Binding AvailableCodecList}"
+                                     SelectedValue="{Binding CodecId}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Pixel Format: " />
+                        <ws:ComboBox ItemsSource="{Binding AvailablePixelFormatList}" 
+                                     SelectedItem="{Binding PixelFormat}" />
+                    </StackPanel>
+                </ws:StackPanel>
+            </ws:GroupBox>
+
+            <ws:GroupBox Header="Network"
+                         Padding="8">
+                <ws:StackPanel Spacing="8">
+                    <StackPanel>
+                        <TextBlock Text="Count For Dropping Frame: " />
+                        <ws:TextBox Text="{Binding CountForDroppingFrame}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <CheckBox Content="Throws Key Frame: "
+                                  IsChecked="{Binding ThrowsKeyFrame}" />
+                    </StackPanel>
+                </ws:StackPanel>
+            </ws:GroupBox>
+        </ws:StackPanel>
+    </ws:ScrollViewer>
+</Window>

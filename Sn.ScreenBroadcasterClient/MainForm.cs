@@ -50,7 +50,7 @@ namespace Sn.ScreenBroadcasterClient
                     await networkStream.ReadBlockAsync(frameTimestampBytes, 0, 8);
                     await networkStream.ReadBlockAsync(frameIsKeyFrameBytes, 0, 4);
                     await networkStream.ReadBlockAsync(framePacketCountBytes, 0, 4);
-
+                    
                     var timestamp = BitConverter.ToInt64(frameTimestampBytes);
                     var framePacketCount = BitConverter.ToInt32(framePacketCountBytes);
                     var frameIsKeyFrame = BitConverter.ToInt32(frameIsKeyFrameBytes);
