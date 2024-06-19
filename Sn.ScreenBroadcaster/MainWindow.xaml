@@ -7,8 +7,8 @@
         xmlns:ws="https://schemas.elecho.dev/wpfsuite"
         mc:Ignorable="d"
         Title="Sn.ScreenBroadcaster"
-        Height="380"
-        Width="550"
+        Height="380" Width="550"
+        WindowStartupLocation="CenterScreen"
         d:DataContext="{d:DesignInstance Type=local:MainWindow}">
 
     <Window.Resources>

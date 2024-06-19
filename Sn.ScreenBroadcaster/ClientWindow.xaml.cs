@@ -123,8 +123,8 @@ namespace Sn.ScreenBroadcaster
 
                     unsafe
                     {
-                        clientStream.Read(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterAppInfo, byte>(ref appInfo), sizeof(BroadcasterAppInfo)));
-                        clientStream.Read(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterScreenInfo, byte>(ref screenInfo), sizeof(BroadcasterScreenInfo)));
+                        clientStream.ReadBlock(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterAppInfo, byte>(ref appInfo), sizeof(BroadcasterAppInfo)));
+                        clientStream.ReadBlock(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterScreenInfo, byte>(ref screenInfo), sizeof(BroadcasterScreenInfo)));
                     }
 
                     if (_videoDecoder is not null)
@@ -159,7 +159,7 @@ namespace Sn.ScreenBroadcaster
                 }
                 catch (FFmpegException ex)
                 {
-                    Dispatcher.BeginInvoke(() =>
+                    _ = Dispatcher.BeginInvoke(() =>
                     {
                         MessageBox.Show(this, ex.Message, "Decoder Issue", MessageBoxButton.OK, MessageBoxImage.Error);
                         _ = StopAndClose();
@@ -167,7 +167,7 @@ namespace Sn.ScreenBroadcaster
                 }
                 catch (Exception ex)
                 {
-                    Dispatcher.BeginInvoke(() =>
+                    _ = Dispatcher.BeginInvoke(() =>
                     {
                         MessageBox.Show(this, ex.Message, "Network Issue", MessageBoxButton.OK, MessageBoxImage.Error);
                         _ = StopAndClose();

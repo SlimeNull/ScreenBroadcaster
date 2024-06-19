@@ -79,8 +79,8 @@ public partial class MainWindow : Window
     public ObservableCollection<AVCodecID> AvailableCodecList { get; } = new() 
     {
         AVCodecID.H264,
-        AVCodecID.Hevc,
-        AVCodecID.Av1,
+        AVCodecID.Hevc,     // HEVC 会有延迟
+        //AVCodecID.Av1,    // AV1 有毛病, 不能用
     };
 
     public ObservableCollection<AVPixelFormat> AvailablePixelFormatList { get; } = new()
@@ -259,6 +259,9 @@ public partial class MainWindow : Window
 
                     while (_lastKeyFrame is null)
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                            return;
+
                         Thread.Sleep(1);
                     }
 
@@ -298,13 +301,25 @@ public partial class MainWindow : Window
             var cancellationToken = _cancellationTokenSource.Token;
             var mediaDictionary = new MediaDictionary();
 
-            if (_videoEncoder.Codec.Name == "libx264")
+            var codecName = _videoEncoder.Codec.Name;
+            if (codecName == "libx264")
             {
                 //mediaDictionary["crf"] = "30";
                 mediaDictionary["tune"] = "zerolatency";
                 mediaDictionary["preset"] = "veryfast";
             }
-            else if (_videoEncoder.Codec.Name == "h264_nvenc")
+            else if (codecName == "libx265")
+            {
+                //mediaDictionary["crf"] = "30";
+                mediaDictionary["tune"] = "zerolatency";
+                mediaDictionary["preset"] = "veryfast";
+            }
+            else if (codecName == "libaom-av1")
+            {
+                //mediaDictionary["tune"] = "zerolatency";
+                mediaDictionary["preset"] = "9";
+            }
+            else if (codecName == "h264_nvenc")
             {
                 mediaDictionary["preset"] = "fast";
                 mediaDictionary["tune"] = "ull";
