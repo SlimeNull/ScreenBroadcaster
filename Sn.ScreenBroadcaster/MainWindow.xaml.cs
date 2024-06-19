@@ -407,8 +407,8 @@ public partial class MainWindow : Window
                         PInvoke.GetCursorInfo(ref cursorInfo) &&
                         _cursorLoader.GetCursor(cursorInfo.hCursor, out var xHotspot, out var yHotspot) is { } cursorBitmap)
                     {
-                        var targetX = cursorInfo.ptScreenPos.X - _screenCapture.ScreenX - xHotspot;
-                        var targetY = cursorInfo.ptScreenPos.Y - _screenCapture.ScreenY - yHotspot;
+                        var targetX = cursorInfo.ptScreenPos.X - _screenCapture.ScreenX - (xHotspot * _screenCapture.DpiX / 96);
+                        var targetY = cursorInfo.ptScreenPos.Y - _screenCapture.ScreenY - (yHotspot * _screenCapture.DpiY / 96);
 
                         var targetWidth = cursorBitmap.Width * _screenCapture.DpiX / 96;
                         var targetHeight = cursorBitmap.Height * _screenCapture.DpiY / 96;
