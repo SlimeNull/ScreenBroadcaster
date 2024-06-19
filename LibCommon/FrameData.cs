@@ -1,11 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Sdcb.FFmpeg.Codecs;
 
 namespace LibCommon
 {
     public record struct FrameData(long Timestamp, bool IsKeyFrame, List<byte[]> Packets)
     {
+#if NET6_0_OR_GREATER
         public void WriteToStream(Stream stream)
         {
             var timestamp = Timestamp;
@@ -52,5 +54,55 @@ namespace LibCommon
 
             return new FrameData(timestamp, isKeyFrame != 0, packets);
         }
+#else
+        public void WriteToStream(Stream stream)
+        {
+            var timestamp = Timestamp;
+            var isKeyFrame = IsKeyFrame;
+            var packetCount = (ushort)Packets.Count;
+
+            using BinaryWriter writer = new BinaryWriter(stream, Encoding.Default, true);
+
+            writer.Write(timestamp);
+            writer.Write(isKeyFrame);
+            writer.Write(packetCount);
+
+            foreach (var packet in Packets)
+            {
+                var packetSize = packet.Length;
+
+                Console.WriteLine();
+                writer.Write(packetSize);
+                writer.Write(packet);
+            }
+        }
+
+        public static FrameData ReadFromStream(Stream stream)
+        {
+            var timestamp = default(long);
+            var isKeyFrame = default(byte);
+            var packetCount = default(ushort);
+
+            using BinaryReader reader = new BinaryReader(stream, Encoding.Default, true);
+
+            timestamp = reader.ReadInt64();
+            isKeyFrame = reader.ReadByte();
+            packetCount = reader.ReadUInt16();
+
+            var packets = new List<byte[]>();
+            for (int i = 0; i < packetCount; i++)
+            {
+                var packetSize = default(int);
+
+                packetSize = reader.ReadInt32();
+
+                byte[] packetBody = reader.ReadBytes(packetSize);
+
+                packets.Add(packetBody);
+            }
+
+            return new FrameData(timestamp, isKeyFrame != 0, packets);
+        }
+#endif
     }
 }

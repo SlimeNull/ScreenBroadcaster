@@ -61,7 +61,12 @@ namespace LibScreenCapture
             _pixelBytes = 4;
             _stride = _output.Description.DesktopBounds.Right * _pixelBytes;
             _dataByteCount = (nuint)(_stride * _output.Description.DesktopBounds.Bottom);
+
+#if NET8_0_OR_GREATER
             _dataPointer = (nint)NativeMemory.Alloc(_dataByteCount);
+#else
+            _dataPointer = (nint)Marshal.AllocHGlobal((nint)_dataByteCount);
+#endif
             _duplicatedOutput = _output1.DuplicateOutput(_device);
         }
 
@@ -82,7 +87,12 @@ namespace LibScreenCapture
 
             // copy data to memory
             var textureDataPointer = mapSource.DataPointer.ToPointer();
+
+#if NET8_0_OR_GREATER
             NativeMemory.Copy(textureDataPointer, (void*)_dataPointer, _dataByteCount);
+#else
+            System.Buffer.MemoryCopy(textureDataPointer, (void*)_dataPointer, _dataByteCount, _dataByteCount);
+#endif
 
             // release resources
             _device.ImmediateContext.UnmapSubresource(_screenTexture, 0);
@@ -113,7 +123,11 @@ namespace LibScreenCapture
                 _screenTexture.Dispose();
                 _duplicatedOutput.Dispose();
 
+#if NET8_0_OR_GREATER
                 NativeMemory.Free((void*)_dataPointer);
+#else
+                Marshal.FreeHGlobal(_dataPointer);
+#endif
 
                 _disposedValue = true;
             }

@@ -199,7 +199,6 @@ public partial class MainWindow : Window
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
         _tcpListener?.Stop();
-        _tcpListener?.Dispose();
         _tcpListener = null;
         _videoEncoder?.Dispose();
         _videoEncoder = null;
@@ -249,13 +248,17 @@ public partial class MainWindow : Window
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
+#if NET6_0_OR_GREATER
                     var newClient = await _tcpListener.AcceptTcpClientAsync(cancellationToken);
+#else
+                    var newClient = await _tcpListener.AcceptTcpClientAsync();
+#endif
                     var newClientStream = newClient.GetStream();
 
                     unsafe
                     {
-                        newClientStream.Write(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterAppInfo, byte>(ref appInfo), sizeof(BroadcasterAppInfo)));
-                        newClientStream.Write(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterScreenInfo, byte>(ref screenInfo), sizeof(BroadcasterScreenInfo)));
+                        newClientStream.WriteStruct(appInfo);
+                        newClientStream.WriteStruct(screenInfo);
                     }
 
                     while (_lastKeyFrame is null)
@@ -275,6 +278,10 @@ public partial class MainWindow : Window
                 }
             }
             catch (OperationCanceledException)
+            {
+                // pass
+            }
+            catch (ObjectDisposedException)
             {
                 // pass
             }
@@ -381,7 +388,11 @@ public partial class MainWindow : Window
                         {
                             fixed (byte* packetBytesPtr = packetBytes)
                             {
+#if NET6_0_OR_GREATER
                                 NativeMemory.Copy((void*)packet.Data.Pointer, packetBytesPtr, (nuint)packetBytes.Length);
+#else
+                                Buffer.MemoryCopy((void*)packet.Data.Pointer, packetBytesPtr, (nuint)packetBytes.Length, (nuint)packetBytes.Length);
+#endif
                             }
                         }
 
@@ -412,6 +423,10 @@ public partial class MainWindow : Window
                 }
             }
             catch (OperationCanceledException)
+            {
+                // pass
+            }
+            catch (ObjectDisposedException)
             {
                 // pass
             }

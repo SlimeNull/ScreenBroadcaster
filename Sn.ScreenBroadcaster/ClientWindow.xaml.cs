@@ -88,7 +88,16 @@ namespace Sn.ScreenBroadcaster
             _tcpClient?.Dispose();
             _videoDecoder?.Dispose();
             _videoFrameConverter?.Dispose();
+
+#if NET6_0_OR_GREATER
             _frames.Clear();
+#else
+            while (_frames.Count > 0)
+            {
+                _frames.TryDequeue(out _);
+            }
+#endif
+
 
             _tcpClient = null;
             _videoDecoder = null;
@@ -115,7 +124,7 @@ namespace Sn.ScreenBroadcaster
 
                 try
                 {
-                    await _tcpClient.ConnectAsync(remoteIPEndPoint);
+                    await _tcpClient.ConnectAsync(remoteIPEndPoint.Address, remoteIPEndPoint.Port);
 
                     var clientStream = _tcpClient.GetStream();
                     var appInfo = default(BroadcasterAppInfo);
@@ -124,8 +133,8 @@ namespace Sn.ScreenBroadcaster
 
                     unsafe
                     {
-                        clientStream.ReadBlock(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterAppInfo, byte>(ref appInfo), sizeof(BroadcasterAppInfo)));
-                        clientStream.ReadBlock(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterScreenInfo, byte>(ref screenInfo), sizeof(BroadcasterScreenInfo)));
+                        appInfo = clientStream.ReadStruct<BroadcasterAppInfo>();
+                        screenInfo = clientStream.ReadStruct<BroadcasterScreenInfo>();
                     }
 
                     if (appInfo.Version != (Assembly.GetExecutingAssembly().GetName().Version?.Major ?? 0))
