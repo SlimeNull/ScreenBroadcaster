@@ -38,7 +38,7 @@ namespace TestWPF
 
             _screenCapture = new DirectScreenCapture(0);
 
-            _videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncoder(AVCodecID.H264))
+            _videoEncoder = new CodecContext(Codec.FindEncoderById(AVCodecID.H264))
             {
                 Width = _screenCapture.Width,
                 Height = _screenCapture.Height,
@@ -50,7 +50,7 @@ namespace TestWPF
                 BitRate = 8000000
             };
 
-            _videoDecoder = new(FFmpegUtilities.FindBestDecoder(AVCodecID.H264))
+            _videoDecoder = new(Codec.FindDecoderById(AVCodecID.H264))
             {
                 Width = 2560,
                 Height = 1440,

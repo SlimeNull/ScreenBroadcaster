@@ -4,7 +4,7 @@ using SharpDX.Win32;
 
 namespace LibScreenCapture
 {
-    public interface IScreenCapture
+    public interface IScreenCapture : IDisposable
     {
         public nint DataPointer { get; }
         public int PixelBytes { get; }
