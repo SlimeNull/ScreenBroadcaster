@@ -10,9 +10,10 @@ namespace LibScreenCapture
         public int PixelBytes { get; }
         public int Stride { get; }
 
-
-        public int Width { get; }
-        public int Height { get; }
+        public int ScreenX { get; }
+        public int ScreenY { get; }
+        public int ScreenWidth { get; }
+        public int ScreenHeight { get; }
 
         public bool Capture();
         public bool Capture(TimeSpan timeout);

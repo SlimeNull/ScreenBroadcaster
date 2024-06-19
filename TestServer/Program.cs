@@ -27,8 +27,8 @@ FrameData? lastKeyFramePackets = null;
 // init encoding
 using CodecContext videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncoder(AVCodecID.H264))
 {
-    Width = capture.Width,
-    Height = capture.Height,
+    Width = capture.ScreenWidth,
+    Height = capture.ScreenHeight,
     Framerate = new AVRational(1, 30),
     TimeBase = new AVRational(1, 30),
     PixelFormat = AVPixelFormat.Yuv420p,
@@ -109,8 +109,8 @@ var captureTask = Task.Run(() =>
         Console.WriteLine($"Captured. Elapsed: {stopwatch.ElapsedMilliseconds}ms");
 
         stopwatch.Restart();
-        bgraFrame.Width = capture.Width;
-        bgraFrame.Height = capture.Height;
+        bgraFrame.Width = capture.ScreenWidth;
+        bgraFrame.Height = capture.ScreenHeight;
         bgraFrame.Format = (int)AVPixelFormat.Bgra;
         bgraFrame.Data[0] = capture.DataPointer;
         bgraFrame.Linesize[0] = capture.Stride;

@@ -40,8 +40,8 @@ namespace TestWPF
 
             _videoEncoder = new CodecContext(Codec.FindEncoderById(AVCodecID.H264))
             {
-                Width = _screenCapture.Width,
-                Height = _screenCapture.Height,
+                Width = _screenCapture.ScreenWidth,
+                Height = _screenCapture.ScreenHeight,
                 Framerate = new AVRational(1, 30),
                 TimeBase = new AVRational(1, 30),
                 PixelFormat = AVPixelFormat.Yuv420p,
@@ -57,7 +57,7 @@ namespace TestWPF
                 PixelFormat = AVPixelFormat.Yuv420p,
             };
 
-            _bitmap = new WriteableBitmap(_screenCapture.Width, _screenCapture.Height, 96, 96, PixelFormats.Bgra32, null);
+            _bitmap = new WriteableBitmap(_screenCapture.ScreenWidth, _screenCapture.ScreenHeight, 96, 96, PixelFormats.Bgra32, null);
         }
 
         protected override void OnRender(DrawingContext drawingContext)
@@ -124,7 +124,7 @@ namespace TestWPF
                             {
                                 Dispatcher.Invoke(() =>
                                 {
-                                    _bitmap.WritePixels(new Int32Rect(0, 0, _bitmap.PixelWidth, _bitmap.PixelHeight), rgbFrameForDecoding.Data[0], _screenCapture.Height * _screenCapture.Stride, _screenCapture.Stride);
+                                    _bitmap.WritePixels(new Int32Rect(0, 0, _bitmap.PixelWidth, _bitmap.PixelHeight), rgbFrameForDecoding.Data[0], _screenCapture.ScreenHeight * _screenCapture.Stride, _screenCapture.Stride);
                                     _image.Source = _bitmap;
                                     //InvalidateVisual();
                                 });

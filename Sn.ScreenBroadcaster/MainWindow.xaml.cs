@@ -15,7 +15,9 @@ using Sdcb.FFmpeg.Raw;
 using Sdcb.FFmpeg.Swscales;
 using Sdcb.FFmpeg.Toolboxs.Extensions;
 using Sdcb.FFmpeg.Utils;
+using SkiaSharp;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 
 namespace Sn.ScreenBroadcaster;
 
@@ -44,10 +46,10 @@ public partial class MainWindow : Window
 
     [ObservableProperty]
     private int _port = 7651;
-    
+
     [ObservableProperty]
     private CaptureMethod _captureMethod = CaptureMethod.DesktopDuplication;
-    
+
     [ObservableProperty]
     private int _displayIndex = 0;
 
@@ -68,15 +70,18 @@ public partial class MainWindow : Window
 
     [ObservableProperty]
     private AVPixelFormat _pixelFormat = AVPixelFormat.Yuv420p;
-    
+
+    [ObservableProperty]
+    private bool _showMouseCursor = true;
+
     [ObservableProperty]
     private int _countForDroppingFrame = 20;
-    
+
     [ObservableProperty]
     private bool _throwsKeyFrame = false;
 
 
-    public ObservableCollection<AVCodecID> AvailableCodecList { get; } = new() 
+    public ObservableCollection<AVCodecID> AvailableCodecList { get; } = new()
     {
         AVCodecID.H264,
         AVCodecID.Hevc,     // HEVC 会有延迟
@@ -98,6 +103,7 @@ public partial class MainWindow : Window
 
     private IScreenCapture? _screenCapture;
     private CodecContext? _videoEncoder;
+    private SKSurface? _skSurface;
     private FrameData? _lastKeyFrame = null;
     private TcpListener? _tcpListener;
     private readonly List<TcpClientInfo> _clients = new();
@@ -112,6 +118,16 @@ public partial class MainWindow : Window
 
     [ObservableProperty]
     private Task? _broadcastTask;
+
+    partial void OnDisplayIndexChanged(int value)
+    {
+        var screens = ScreenInfo.GetScreens();
+        if (value >= 0 && value < screens.Length)
+        {
+            FrameWidth = screens[value].Width;
+            FrameHeight = screens[value].Height;
+        }
+    }
 
     [RelayCommand]
     private void Connect()
@@ -136,7 +152,7 @@ public partial class MainWindow : Window
     [RelayCommand]
     private void Start()
     {
-        if(BroadcastTask is { })
+        if (BroadcastTask is { })
         {
             return;
         }
@@ -147,37 +163,57 @@ public partial class MainWindow : Window
             return;
         }
 
-        // capture
-        _screenCapture = CaptureMethod switch
+        try
         {
-            CaptureMethod.DesktopDuplication => new DirectScreenCapture(DisplayIndex),
-            CaptureMethod.BitBlt => new GdiScreenCapture(),
-            _ => throw new Exception("This would never happend."),
-        };
+            // capture
+            _screenCapture = CaptureMethod switch
+            {
+                CaptureMethod.DesktopDuplication => new DirectScreenCapture(DisplayIndex),
+                CaptureMethod.BitBlt => new GdiScreenCapture(DisplayIndex),
+                _ => throw new Exception("This would never happened."),
+            };
 
-        // init encoding
-        _videoEncoder = new CodecContext(Codec.FindEncoderById(CodecId))
+            // init SKSurface
+            _skSurface = SKSurface.Create(new SKImageInfo(_screenCapture.ScreenWidth, _screenCapture.ScreenHeight, SKColorType.Bgra8888, SKAlphaType.Opaque), _screenCapture.DataPointer, _screenCapture.Stride);
+
+            // init encoding
+            _videoEncoder = new CodecContext(Codec.FindEncoderById(CodecId))
+            {
+                Width = FrameWidth,
+                Height = FrameHeight,
+                Framerate = new AVRational(1, MaxFrameRate),
+                TimeBase = new AVRational(1, MaxFrameRate),
+                PixelFormat = PixelFormat,
+                BitRate = BitRate,
+                MaxBFrames = 0,
+                GopSize = 10,
+            };
+
+            // correct the bitrate
+            var codecName = _videoEncoder.Codec.Name;
+            if (codecName == "libx264" ||
+                codecName == "libx265")
+            {
+                // libx264 and libx256 bitrate is measured in kilobits
+                _videoEncoder.BitRate /= 1000;
+            }
+
+            // network
+            _tcpListener = new TcpListener(new IPEndPoint(ipAddress, Port));
+
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            BroadcastTask = Task.WhenAll(
+                NetworkLoop(),
+                CaptureLoop(),
+                BroadcastLoop()
+            );
+        }
+        catch (Exception ex)
         {
-            Width = FrameWidth,
-            Height = FrameHeight,
-            Framerate = new AVRational(1, MaxFrameRate),
-            TimeBase = new AVRational(1, MaxFrameRate),
-            PixelFormat = PixelFormat,
-            BitRate = BitRate,
-            MaxBFrames = 0,
-            GopSize = 10,
-        };
-
-        // network
-        _tcpListener = new TcpListener(new IPEndPoint(ipAddress, Port));
-
-        _cancellationTokenSource = new CancellationTokenSource();
-
-        BroadcastTask = Task.WhenAll(
-            NetworkLoop(),
-            CaptureLoop(),
-            BroadcastLoop()
-        );
+            MessageBox.Show(this, $"Failed to start broadcasting. {ex.Message}", "Initialization Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+            _ = Stop();
+        }
     }
 
     [RelayCommand]
@@ -204,6 +240,8 @@ public partial class MainWindow : Window
         _videoEncoder = null;
         _screenCapture?.Dispose();
         _screenCapture = null;
+        _skSurface?.Dispose();
+        _skSurface = null;
 
         foreach (var client in _clients)
         {
@@ -223,7 +261,7 @@ public partial class MainWindow : Window
         return Task.Run(async () =>
         {
             if (_tcpListener is null ||
-                _cancellationTokenSource is null||
+                _cancellationTokenSource is null ||
                 _videoEncoder is null)
                 return;
 
@@ -310,18 +348,14 @@ public partial class MainWindow : Window
             var mediaDictionary = new MediaDictionary();
             var lastFrameTime = DateTimeOffset.MinValue;
             var maxFrameRate = MaxFrameRate;
+            var showMouseCursor = ShowMouseCursor;
 
             if (maxFrameRate == 0)
                 maxFrameRate = 60;
 
             var codecName = _videoEncoder.Codec.Name;
-            if (codecName == "libx264")
-            {
-                //mediaDictionary["crf"] = "30";
-                mediaDictionary["tune"] = "zerolatency";
-                mediaDictionary["preset"] = "veryfast";
-            }
-            else if (codecName == "libx265")
+            if (codecName == "libx264" ||
+                codecName == "libx265")
             {
                 //mediaDictionary["crf"] = "30";
                 mediaDictionary["tune"] = "zerolatency";
@@ -351,12 +385,18 @@ public partial class MainWindow : Window
 
                     _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
 
+                    if (showMouseCursor &&
+                        PInvoke.GetCursorPos(out var point))
+                    {
+
+                    }
+
                     var nowTime = DateTimeOffset.Now;
                     var timestamp = nowTime.ToUnixTimeMilliseconds();
                     lastFrameTime = nowTime;
 
-                    _bgraFrame.Width = _screenCapture.Width;
-                    _bgraFrame.Height = _screenCapture.Height;
+                    _bgraFrame.Width = _screenCapture.ScreenWidth;
+                    _bgraFrame.Height = _screenCapture.ScreenHeight;
                     _bgraFrame.Format = (int)AVPixelFormat.Bgra;
                     _bgraFrame.Data[0] = _screenCapture.DataPointer;
                     _bgraFrame.Linesize[0] = _screenCapture.Stride;
@@ -445,7 +485,7 @@ public partial class MainWindow : Window
     {
         return Task.Run(() =>
         {
-            if(_cancellationTokenSource is null)
+            if (_cancellationTokenSource is null)
                 return;
             var cancellationToken = _cancellationTokenSource.Token;
 
@@ -492,6 +532,3 @@ public partial class MainWindow : Window
         _ = Stop();
     }
 }
-
-
-public record struct TcpClientInfo(TcpClient TcpClient, ConcurrentQueue<FrameData> Frames);

@@ -16,8 +16,7 @@ namespace LibScreenCapture
         private readonly ushort _bitCount;
         private readonly int _pixelBytes;
         private readonly int _stride;
-        private readonly int _desktopWidth;
-        private readonly int _desktopHeight;
+        private readonly ScreenInfo _screenInfo;
 
 
         private bool _disposedValue;
@@ -25,29 +24,36 @@ namespace LibScreenCapture
         public nint DataPointer => _bitmapDataPtr;
         public int PixelBytes => _pixelBytes;
         public int Stride => _stride;
-        public int Width => _desktopWidth;
-        public int Height => _desktopHeight;
 
-        public unsafe GdiScreenCapture(bool noAlphaChannel)
+        public int ScreenX => _screenInfo.X;
+        public int ScreenY => _screenInfo.Y;
+        public int ScreenWidth => _screenInfo.Width;
+        public int ScreenHeight => _screenInfo.Height;
+
+        public unsafe GdiScreenCapture(int displayIndex, bool noAlphaChannel)
         {
+            var screenCount = ScreenInfo.GetScreenCount();
+            if (displayIndex < 0 || displayIndex >= screenCount)
+                throw new ArgumentOutOfRangeException(nameof(displayIndex));
+
+            var screens = ScreenInfo.GetScreens();
+
+            _screenInfo = screens[displayIndex];
             _desktopWindow = PInvoke.GetDesktopWindow();
             _desktopDC = PInvoke.GetDC(_desktopWindow);
 
-            _desktopWidth = PInvoke.GetDeviceCaps(_desktopDC, GET_DEVICE_CAPS_INDEX.DESKTOPHORZRES);
-            _desktopHeight = PInvoke.GetDeviceCaps(_desktopDC, GET_DEVICE_CAPS_INDEX.DESKTOPVERTRES);
-
             _bitCount = noAlphaChannel ? (ushort)24 : (ushort)32;
             _pixelBytes = _bitCount / 8;
-            _stride = (((_desktopWidth * _bitCount) + 31) & ~31) >> 3;
+            _stride = (((_screenInfo.Width * _bitCount) + 31) & ~31) >> 3;
 
             BITMAPINFO bitmapInfo = new BITMAPINFO();
             bitmapInfo.bmiHeader = new BITMAPINFOHEADER();
             bitmapInfo.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
-            bitmapInfo.bmiHeader.biWidth = _desktopWidth;
-            bitmapInfo.bmiHeader.biHeight = -_desktopHeight;    // 这里把高度反过来, 要不然内容就反过来了, 只有它的值为复数, 内容才是从上往下的
+            bitmapInfo.bmiHeader.biWidth = _screenInfo.Width;
+            bitmapInfo.bmiHeader.biHeight = -_screenInfo.Height;    // 这里把高度反过来, 要不然内容就反过来了, 只有它的值为复数, 内容才是从上往下的
             bitmapInfo.bmiHeader.biPlanes = 1;
             bitmapInfo.bmiHeader.biBitCount = _bitCount;
-            bitmapInfo.bmiHeader.biSizeImage = (uint)(_desktopWidth * _desktopHeight);
+            bitmapInfo.bmiHeader.biSizeImage = (uint)(_screenInfo.Width * _screenInfo.Height);
             bitmapInfo.bmiHeader.biCompression = 0;  // RGB
 
             _memoryDC = PInvoke.CreateCompatibleDC(_desktopDC);
@@ -59,14 +65,14 @@ namespace LibScreenCapture
             _selectedObject = PInvoke.SelectObject(_memoryDC, _bitmap);
         }
 
-        public GdiScreenCapture() : this(false)
+        public GdiScreenCapture(int displayIndex) : this(displayIndex, false)
         {
 
         }
 
         public bool Capture()
         {
-            PInvoke.BitBlt(_memoryDC, 0, 0, _desktopWidth, _desktopHeight, _desktopDC, 0, 0, ROP_CODE.SRCCOPY);
+            PInvoke.BitBlt(_memoryDC, 0, 0, _screenInfo.Width, _screenInfo.Height, _desktopDC, _screenInfo.X, _screenInfo.Y, ROP_CODE.SRCCOPY);
             return true;
         }
 

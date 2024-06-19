@@ -13,3 +13,6 @@ GetWindowRect
 GetClientRect
 GetDeviceCaps
 AllocConsole
+GetCursorPos
+LoadImage
+IDC_*

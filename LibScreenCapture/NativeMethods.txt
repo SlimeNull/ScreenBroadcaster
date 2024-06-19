@@ -12,4 +12,8 @@ PrintWindow
 GetWindowRect
 GetClientRect
 GetDeviceCaps
+GetSystemMetrics
+EnumDisplayMonitors
+GetDpiForMonitor
+GetMonitorInfo
 BI_*

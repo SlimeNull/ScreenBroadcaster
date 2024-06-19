@@ -26,17 +26,30 @@ namespace LibScreenCapture
         public int PixelBytes => _pixelBytes;
         public int Stride => _stride;
 
-        public int Width => _output.Description.DesktopBounds.Right;
-        public int Height => _output.Description.DesktopBounds.Bottom;
+        public int ScreenX => _output.Description.DesktopBounds.Left;
+        public int ScreenY => _output.Description.DesktopBounds.Top;
+        public int ScreenWidth => _output.Description.DesktopBounds.Right - _output.Description.DesktopBounds.Left;
+        public int ScreenHeight => _output.Description.DesktopBounds.Bottom - _output.Description.DesktopBounds.Top;
 
 
-        public unsafe DirectScreenCapture(int adapterIndex)
+        public unsafe DirectScreenCapture(int displayIndex)
         {
+            var adapterIndex = 0;
+
             _factory = new Factory1();
             _adapter = _factory.GetAdapter1(adapterIndex);
-            _device = new(_adapter);
+            while (_adapter.Outputs.Length < displayIndex)
+            {
+                adapterIndex++;
+                displayIndex -= _adapter.Outputs.Length;
 
-            _output = _adapter.GetOutput(0);
+                _adapter.Dispose();
+                _adapter = _factory.GetAdapter1(adapterIndex);
+            }
+
+            _output = _adapter.GetOutput(displayIndex);
+
+            _device = new(_adapter);
             _output1 = _output.QueryInterface<Output1>();
 
             _screenTexture = new Texture2D(_device,

@@ -13,6 +13,7 @@
         d:DataContext="{d:DesignInstance Type=local:MainWindow}">
 
     <Window.Resources>
+        <ws:ValueIsNullConverter x:Key="ValueIsNullConverter"/>
         <ws:ValueConverterGroup x:Key="ValueIsNullToVisibilityConverter">
             <ws:ValueIsNullConverter/>
             <ws:BooleanToVisibilityConverter/>
@@ -61,72 +62,80 @@
                 </ws:StackPanel>
 
                 <ws:GroupBox Header="General"
-                             Padding="8">
+                             Padding="8"
+                             IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
                             <TextBlock Text="Adress: " />
-                            <ws:TextBox Text="{Binding Address}" />
+                            <TextBox Text="{Binding Address,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="Port: " />
-                            <ws:TextBox Text="{Binding Port}" />
+                            <TextBox Text="{Binding Port,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
                 <ws:GroupBox Header="Capturing"
-                             Padding="8">
+                             Padding="8"
+                             IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
                             <TextBlock Text="Capture Method: " />
-                            <ws:ComboBox ItemsSource="{Binding AvailableCaptureMethodList}"
-                                         SelectedItem="{Binding CaptureMethod}" />
+                            <ComboBox ItemsSource="{Binding AvailableCaptureMethodList}"
+                                      SelectedItem="{Binding CaptureMethod}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="Display Index: " />
-                            <ws:TextBox Text="{Binding DisplayIndex}" />
+                            <TextBox Text="{Binding DisplayIndex,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
                 <ws:GroupBox Header="Encoding"
-                             Padding="8">
+                             Padding="8"
+                             IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
                             <TextBlock Text="Width: " />
-                            <ws:TextBox Text="{Binding FrameWidth}" />
+                            <TextBox Text="{Binding FrameWidth,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="Height: " />
-                            <ws:TextBox Text="{Binding FrameHeight}" />
+                            <TextBox Text="{Binding FrameHeight,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="Max Frame Rate: " />
-                            <ws:TextBox Text="{Binding MaxFrameRate}" />
+                            <TextBox Text="{Binding MaxFrameRate,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="BitRate: " />
-                            <ws:TextBox Text="{Binding BitRate}" />
+                            <TextBox Text="{Binding BitRate,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel >
                             <TextBlock Text="Codec: " />
-                            <ws:ComboBox ItemsSource="{Binding AvailableCodecList}"
-                                         SelectedValue="{Binding CodecId}" />
+                            <ComboBox ItemsSource="{Binding AvailableCodecList}"
+                                      SelectedValue="{Binding CodecId}" />
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="Pixel Format: " />
-                            <ws:ComboBox ItemsSource="{Binding AvailablePixelFormatList}"
-                                         SelectedItem="{Binding PixelFormat}" />
+                            <ComboBox ItemsSource="{Binding AvailablePixelFormatList}"
+                                      SelectedItem="{Binding PixelFormat}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <CheckBox Content="Show Mouse Cursor: "
+                                      IsChecked="{Binding ShowMouseCursor}" />
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
                 <ws:GroupBox Header="Network"
-                             Padding="8">
+                             Padding="8"
+                             IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
                             <TextBlock Text="Count For Dropping Frame: " />
-                            <ws:TextBox Text="{Binding CountForDroppingFrame}" />
+                            <TextBox Text="{Binding CountForDroppingFrame,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel>
                             <CheckBox Content="Throws Key Frame: "

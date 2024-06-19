@@ -1,29 +1,32 @@
-﻿using LibScreenCapture;
+﻿using System.Runtime.InteropServices;
+using LibScreenCapture;
+using SkiaSharp;
+using Spectre.Console;
 
-IScreenCapture screenCapture = new GdiScreenCapture();
-int captureCounter = 0;
 
-_ = Task.Run(() =>
+IScreenCapture capture = new DirectScreenCapture(0);
+
+for (int i = 0; ; i++)
 {
-    while (true)
-    {
-        var ok = screenCapture.Capture(TimeSpan.FromMilliseconds(0));
+    bool ok = capture.Capture(TimeSpan.FromSeconds(1f));
 
-        if (ok)
+    SKBitmap bitmap = new SKBitmap(capture.ScreenWidth, capture.ScreenHeight, SKColorType.Bgra8888, SKAlphaType.Opaque);
+    var bitmapPixelsPtr = bitmap.GetPixels();
+
+    unsafe
+    {
+        for (int y = 0; y < capture.ScreenHeight; y++)
         {
-            captureCounter++;
+            NativeMemory.Copy((void*)(capture.DataPointer + capture.Stride * y), (void*)(bitmapPixelsPtr + bitmap.RowBytes * y), (nuint)Math.Min(capture.Stride, bitmap.RowBytes));
         }
     }
-});
 
-_ = Task.Run(async () =>
-{
-    while (true)
-    {
-        await Task.Delay(1000);
-        Console.WriteLine($"{captureCounter}/s");
-        captureCounter = 0;
-    }
-});
+    //using var output = File.Create($"output{i}.png");
 
-await Task.Delay(-1);
+    var image = new CanvasImage(bitmap.Encode(SKEncodedImageFormat.Jpeg, 20).AsStream());
+    Console.SetCursorPosition(0, 0);
+    AnsiConsole.Write(image);
+
+    Console.WriteLine($"Capture ok: {ok}, Index: {i}");
+}
+
