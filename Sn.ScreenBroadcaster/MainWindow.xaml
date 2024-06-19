@@ -22,14 +22,14 @@
         </ws:ValueConverterGroup>
     </Window.Resources>
 
-    <DockPanel>
+    <DockPanel FocusVisualStyle="{x:Null}">
         <ws:ProgressBar DockPanel.Dock="Top"
                         Height="1"
                         IsIndeterminate="True"
                         BorderThickness="0"
                         Visibility="{Binding BroadcastTask,Converter={StaticResource ValueIsNotNullToVisibilityConverter}}"/>
 
-        <ws:ScrollViewer>
+        <ws:ScrollViewer FocusVisualStyle="{x:Null}">
             <ws:StackPanel Spacing="8"
                            Margin="24">
                 <ws:StackPanel Margin="0 48"
@@ -49,7 +49,7 @@
                                 <Setter Property="MinWidth" Value="80"/>
                             </Style>
                         </ws:StackPanel.Resources>
-                        
+
                         <ws:Button Content="Connect" Command="{Binding ConnectCommand}"
                                    Visibility="{Binding BroadcastTask,Converter={StaticResource ValueIsNullToVisibilityConverter}}"/>
                         <ws:Button Content="Broadcast" Command="{Binding StartCommand}"
