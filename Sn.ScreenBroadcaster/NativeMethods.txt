@@ -12,3 +12,4 @@ PrintWindow
 GetWindowRect
 GetClientRect
 GetDeviceCaps
+AllocConsole
