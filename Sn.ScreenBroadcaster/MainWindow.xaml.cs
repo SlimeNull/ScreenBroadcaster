@@ -164,6 +164,7 @@ public partial class MainWindow : Window
             TimeBase = new AVRational(1, MaxFrameRate),
             PixelFormat = PixelFormat,
             BitRate = BitRate,
+            MaxBFrames = 0,
             GopSize = 10,
         };
 
@@ -300,6 +301,11 @@ public partial class MainWindow : Window
             var pts = 0;
             var cancellationToken = _cancellationTokenSource.Token;
             var mediaDictionary = new MediaDictionary();
+            var lastFrameTime = DateTimeOffset.MinValue;
+            var maxFrameRate = MaxFrameRate;
+
+            if (maxFrameRate == 0)
+                maxFrameRate = 60;
 
             var codecName = _videoEncoder.Codec.Name;
             if (codecName == "libx264")
@@ -331,9 +337,16 @@ public partial class MainWindow : Window
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
+                    while ((DateTimeOffset.Now - lastFrameTime) < TimeSpan.FromSeconds(1.0 / maxFrameRate))
+                    {
+                        // wait
+                    }
+
                     _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
 
-                    var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    var nowTime = DateTimeOffset.Now;
+                    var timestamp = nowTime.ToUnixTimeMilliseconds();
+                    lastFrameTime = nowTime;
 
                     _bgraFrame.Width = _screenCapture.Width;
                     _bgraFrame.Height = _screenCapture.Height;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -125,6 +126,16 @@ namespace Sn.ScreenBroadcaster
                     {
                         clientStream.ReadBlock(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterAppInfo, byte>(ref appInfo), sizeof(BroadcasterAppInfo)));
                         clientStream.ReadBlock(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterScreenInfo, byte>(ref screenInfo), sizeof(BroadcasterScreenInfo)));
+                    }
+
+                    if (appInfo.Version != (Assembly.GetExecutingAssembly().GetName().Version?.Major ?? 0))
+                    {
+                        _ = Dispatcher.BeginInvoke(() =>
+                        {
+                            MessageBox.Show(this, "Remote server version does not match current client version", "Version Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                            _ = StopAndClose();
+                        });
+                        _ = StopAndClose();
                     }
 
                     if (_videoDecoder is not null)
