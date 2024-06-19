@@ -2,6 +2,8 @@
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -107,12 +109,34 @@ public partial class MainWindow : Window
 
 
     private CancellationTokenSource? _cancellationTokenSource;
+
+    [ObservableProperty]
     private Task? _broadcastTask;
+
+    [RelayCommand]
+    private void Connect()
+    {
+        if (!IPAddress.TryParse(Address, out var ipAddress))
+        {
+            MessageBox.Show("Invalid IP Address", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+
+        this.Hide();
+
+        var clientWindow = new ClientWindow(this);
+        clientWindow.Owner = this;
+        clientWindow.Start();
+        clientWindow.ShowDialog();
+
+        this.Show();
+    }
 
     [RelayCommand]
     private void Start()
     {
-        if(_broadcastTask is { })
+        if(BroadcastTask is { })
         {
             return;
         }
@@ -148,7 +172,7 @@ public partial class MainWindow : Window
 
         _cancellationTokenSource = new CancellationTokenSource();
 
-        _broadcastTask = Task.WhenAll(
+        BroadcastTask = Task.WhenAll(
             NetworkLoop(),
             CaptureLoop(),
             BroadcastLoop()
@@ -159,20 +183,27 @@ public partial class MainWindow : Window
     private async Task Stop()
     {
         _cancellationTokenSource?.Cancel();
+
         try
         {
-            if (_broadcastTask is not null)
-                await _broadcastTask;
+            if (BroadcastTask is not null)
+                await BroadcastTask;
         }
-        catch (Exception) { }
+        catch { }
+        finally
+        {
+            BroadcastTask = null;
+        }
 
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
+        _tcpListener?.Stop();
+        _tcpListener?.Dispose();
+        _tcpListener = null;
         _videoEncoder?.Dispose();
         _videoEncoder = null;
         _screenCapture?.Dispose();
         _screenCapture = null;
-        _broadcastTask = null;
 
         foreach (var client in _clients)
         {
@@ -182,6 +213,7 @@ public partial class MainWindow : Window
             }
             catch { }
         }
+
         _clients.Clear();
     }
 
@@ -191,30 +223,64 @@ public partial class MainWindow : Window
         return Task.Run(async () =>
         {
             if (_tcpListener is null ||
-                _cancellationTokenSource is null)
+                _cancellationTokenSource is null||
+                _videoEncoder is null)
                 return;
+
+            var appInfo = new BroadcasterAppInfo()
+            {
+                Version = Assembly.GetExecutingAssembly().GetName().Version?.Major ?? 0
+            };
+
+            var screenInfo = new BroadcasterScreenInfo()
+            {
+                Width = FrameWidth,
+                Height = FrameHeight,
+                CodecID = (int)_videoEncoder.CodecId,
+                PixelFormat = (int)_videoEncoder.PixelFormat,
+            };
 
             var cancellationToken = _cancellationTokenSource.Token;
 
-            _tcpListener.Start();
-
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                var newClient = await _tcpListener.AcceptTcpClientAsync(cancellationToken);
+                _tcpListener.Start();
 
-                lock (_clients)
+                while (!cancellationToken.IsCancellationRequested)
                 {
+                    var newClient = await _tcpListener.AcceptTcpClientAsync(cancellationToken);
+                    var newClientStream = newClient.GetStream();
+
+                    unsafe
+                    {
+                        newClientStream.Write(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterAppInfo, byte>(ref appInfo), sizeof(BroadcasterAppInfo)));
+                        newClientStream.Write(MemoryMarshal.CreateSpan(ref Unsafe.As<BroadcasterScreenInfo, byte>(ref screenInfo), sizeof(BroadcasterScreenInfo)));
+                    }
+
                     while (_lastKeyFrame is null)
                     {
                         Thread.Sleep(1);
                     }
 
-                    var clientStream = newClient.GetStream();
+                    _lastKeyFrame.Value.WriteToStream(newClientStream);
 
-                    _lastKeyFrame.Value.WriteToStream(clientStream);
-
-                    _clients.Add(new TcpClientInfo(newClient, new()));
+                    lock (_clients)
+                    {
+                        _clients.Add(new TcpClientInfo(newClient, new()));
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // pass
+            }
+            catch (Exception ex)
+            {
+                _ = Dispatcher.BeginInvoke(() =>
+                {
+                    MessageBox.Show(this, ex.Message, "Network Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _ = Stop();
+                });
             }
         });
     }
@@ -244,75 +310,90 @@ public partial class MainWindow : Window
                 mediaDictionary["tune"] = "ull";
             }
 
-            _videoEncoder.Open(null, mediaDictionary);
-
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
+                _videoEncoder.Open(null, mediaDictionary);
 
-                var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
-                _bgraFrame.Width = _screenCapture.Width;
-                _bgraFrame.Height = _screenCapture.Height;
-                _bgraFrame.Format = (int)AVPixelFormat.Bgra;
-                _bgraFrame.Data[0] = _screenCapture.DataPointer;
-                _bgraFrame.Linesize[0] = _screenCapture.Stride;
-                _bgraFrame.Pts = pts++;
-
-                _yuvFrame.Width = FrameWidth;
-                _yuvFrame.Height = FrameHeight;
-                _yuvFrame.Format = (int)_videoEncoder.PixelFormat;
-
-                _yuvFrame.EnsureBuffer();
-                _yuvFrame.MakeWritable();
-
-                _videoFrameConverter.ConvertFrame(_bgraFrame, _yuvFrame);
-                _yuvFrame.Pts = pts;
-
-                bool isKeyFrame = false;
-                List<byte[]> framePacketBytes = new();
-
-                if (cancellationToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    return;
-                }    
+                    _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
 
-                foreach (var packet in _videoEncoder.EncodeFrame(_yuvFrame, _packetRef))
-                {
-                    byte[] packetBytes = new byte[packet.Data.Length];
+                    var timestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    unsafe
+                    _bgraFrame.Width = _screenCapture.Width;
+                    _bgraFrame.Height = _screenCapture.Height;
+                    _bgraFrame.Format = (int)AVPixelFormat.Bgra;
+                    _bgraFrame.Data[0] = _screenCapture.DataPointer;
+                    _bgraFrame.Linesize[0] = _screenCapture.Stride;
+                    _bgraFrame.Pts = pts++;
+
+                    _yuvFrame.Width = FrameWidth;
+                    _yuvFrame.Height = FrameHeight;
+                    _yuvFrame.Format = (int)_videoEncoder.PixelFormat;
+
+                    _yuvFrame.EnsureBuffer();
+                    _yuvFrame.MakeWritable();
+
+                    _videoFrameConverter.ConvertFrame(_bgraFrame, _yuvFrame);
+                    _yuvFrame.Pts = pts;
+
+                    bool isKeyFrame = false;
+                    List<byte[]> framePacketBytes = new();
+
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        fixed (byte* packetBytesPtr = packetBytes)
+                        return;
+                    }
+
+                    foreach (var packet in _videoEncoder.EncodeFrame(_yuvFrame, _packetRef))
+                    {
+                        byte[] packetBytes = new byte[packet.Data.Length];
+
+                        unsafe
                         {
-                            NativeMemory.Copy((void*)packet.Data.Pointer, packetBytesPtr, (nuint)packetBytes.Length);
+                            fixed (byte* packetBytesPtr = packetBytes)
+                            {
+                                NativeMemory.Copy((void*)packet.Data.Pointer, packetBytesPtr, (nuint)packetBytes.Length);
+                            }
+                        }
+
+                        framePacketBytes.Add(packetBytes);
+
+                        if ((packet.Flags & ffmpeg.AV_PKT_FLAG_KEY) != 0)
+                        {
+                            isKeyFrame = true;
                         }
                     }
 
-                    framePacketBytes.Add(packetBytes);
-
-                    if ((packet.Flags & ffmpeg.AV_PKT_FLAG_KEY) != 0)
+                    if (isKeyFrame)
                     {
-                        isKeyFrame = true;
+                        _lastKeyFrame = new FrameData(timestamp, true, framePacketBytes);
                     }
-                }
 
-                if (isKeyFrame)
-                {
-                    _lastKeyFrame = new FrameData(timestamp, true, framePacketBytes);
-                }
-
-                if (framePacketBytes.Count != 0)
-                {
-                    lock (_clients)
+                    if (framePacketBytes.Count != 0)
                     {
-                        foreach (var client in _clients)
+                        lock (_clients)
                         {
-                            client.Frames.Enqueue(new FrameData(timestamp, isKeyFrame, framePacketBytes));
+                            foreach (var client in _clients)
+                            {
+                                client.Frames.Enqueue(new FrameData(timestamp, isKeyFrame, framePacketBytes));
+                            }
                         }
                     }
-                }
 
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // pass
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    MessageBox.Show(this, ex.Message, "Decoder Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _ = Stop();
+                });
             }
         });
     }
@@ -325,10 +406,13 @@ public partial class MainWindow : Window
                 return;
             var cancellationToken = _cancellationTokenSource.Token;
 
+            List<TcpClientInfo> clientsToRemove = new();
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 lock (_clients)
                 {
+                    clientsToRemove.Clear();
                     foreach (var client in _clients)
                     {
                         while (client.Frames.Count > CountForDroppingFrame &&
@@ -336,18 +420,24 @@ public partial class MainWindow : Window
                         {
                             client.Frames.TryDequeue(out _);
                         }
-                    }
-                }
 
-                lock (_clients)
-                {
-                    foreach (var client in _clients)
-                    {
                         if (client.Frames.TryDequeue(out var frameData))
                         {
-                            var stream = client.TcpClient.GetStream();
-                            frameData.WriteToStream(stream);
+                            try
+                            {
+                                var stream = client.TcpClient.GetStream();
+                                frameData.WriteToStream(stream);
+                            }
+                            catch
+                            {
+                                clientsToRemove.Add(client);
+                            }
                         }
+                    }
+
+                    foreach (var client in clientsToRemove)
+                    {
+                        _clients.Remove(client);
                     }
                 }
             }

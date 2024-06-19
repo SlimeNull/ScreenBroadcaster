@@ -2,8 +2,13 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Sn.ScreenBroadcaster"
+             xmlns:ws="https://schemas.elecho.dev/wpfsuite"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <Style TargetType="{x:Type ws:TextBox}">
+                <Setter Property="Padding" Value="2"/>
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

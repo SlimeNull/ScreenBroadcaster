@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sn.ScreenBroadcasterClient", "Sn.ScreenBroadcasterClient\Sn.ScreenBroadcasterClient.csproj", "{957DCCBF-66D4-418C-9A97-6EC63862E7FA}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibScreenCapture", "LibScreenCapture\LibScreenCapture.csproj", "{3415B788-7FD4-4B55-B4AA-1E832DD4776C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\TestConsole.csproj", "{E234355E-BD64-4157-BE5F-EE1AF0B6BB6C}"
@@ -17,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestForm", "TestForm\TestFo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestWPF", "TestWPF\TestWPF.csproj", "{ACF4155B-04F0-4BDE-B431-D6D06C7465E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sn.ScreenBroadcaster", "Sn.ScreenBroadcaster\Sn.ScreenBroadcaster.csproj", "{3C9377F9-9E01-4769-BCF5-6147F6539D3C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sn.ScreenBroadcaster", "Sn.ScreenBroadcaster\Sn.ScreenBroadcaster.csproj", "{3C9377F9-9E01-4769-BCF5-6147F6539D3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{957DCCBF-66D4-418C-9A97-6EC63862E7FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{957DCCBF-66D4-418C-9A97-6EC63862E7FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{957DCCBF-66D4-418C-9A97-6EC63862E7FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{957DCCBF-66D4-418C-9A97-6EC63862E7FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3415B788-7FD4-4B55-B4AA-1E832DD4776C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3415B788-7FD4-4B55-B4AA-1E832DD4776C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3415B788-7FD4-4B55-B4AA-1E832DD4776C}.Release|Any CPU.ActiveCfg = Release|Any CPU

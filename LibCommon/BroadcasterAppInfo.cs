@@ -2,7 +2,7 @@
 
 namespace LibCommon
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct BroadcasterAppInfo
     {
         public int Version;
