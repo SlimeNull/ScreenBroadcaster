@@ -10,6 +10,8 @@ namespace LibScreenCapture
         public int PixelBytes { get; }
         public int Stride { get; }
 
+        public int DpiX { get; }
+        public int DpiY { get; }
         public int ScreenX { get; }
         public int ScreenY { get; }
         public int ScreenWidth { get; }

@@ -22,6 +22,6 @@ GetCursor
 GetCursorInfo
 GetObject
 ICONINFO
-DrawIcon
 LoadCursor
+GetIconInfo
 GetDIBits
