@@ -42,6 +42,7 @@ public partial class MainWindow : Window
         DataContext = this;
         InitializeComponent();
 
+        DisplayIndex = 0;
     }
 
     [ObservableProperty]
@@ -54,7 +55,20 @@ public partial class MainWindow : Window
     private CaptureMethod _captureMethod = CaptureMethod.DesktopDuplication;
 
     [ObservableProperty]
-    private int _displayIndex = 0;
+    private int _displayIndex = -1;
+
+    [ObservableProperty]
+    private ConfigMode _encodingConfigMode = ConfigMode.Simple;
+
+    // simple encoding settings
+
+    [ObservableProperty]
+    private DisplayResolution _frameSize;
+
+    [ObservableProperty]
+    private BitRateMode _bitRateMode;
+
+    // advanced encoding settings
 
     [ObservableProperty]
     private int _frameWidth = 1920;
@@ -83,12 +97,29 @@ public partial class MainWindow : Window
     [ObservableProperty]
     private bool _throwsKeyFrame = false;
 
+    public ObservableCollection<ConfigMode> AvailableConfigModes { get; } = new()
+    {
+        ConfigMode.Simple,
+        ConfigMode.Advanced
+    };
 
     public ObservableCollection<AVCodecID> AvailableCodecList { get; } = new()
     {
         AVCodecID.H264,
         AVCodecID.Hevc,     // HEVC 会有延迟
         //AVCodecID.Av1,    // AV1 有毛病, 不能用
+    };
+
+    public ObservableCollection<DisplayResolution> AvailableFrameSizes { get; } = new()
+    {
+        // pass
+    };
+
+    public ObservableCollection<BitRateMode> AvailableBitRateModes { get; } = new()
+    {
+        BitRateMode.Normal,
+        BitRateMode.Large,
+        BitRateMode.Small,
     };
 
     public ObservableCollection<AVPixelFormat> AvailablePixelFormatList { get; } = new()
@@ -122,14 +153,60 @@ public partial class MainWindow : Window
     [ObservableProperty]
     private Task? _broadcastTask;
 
+    private int GetBitRate(int width, int height, BitRateMode mode)
+    {
+        var areaSize = (double)(width * height);
+        var rate = areaSize / (2560 * 1440);
+
+        var baseBitRate = mode switch
+        {
+            BitRateMode.Large => 8_000_000,
+            BitRateMode.Normal => 4_000_000,
+            BitRateMode.Small => 2_000_000,
+
+            _ => 4_000_000
+        };
+
+        return (int)(baseBitRate * rate);
+    }
+
     partial void OnDisplayIndexChanged(int value)
     {
         var screens = ScreenInfo.GetScreens();
+
         if (value >= 0 && value < screens.Length)
         {
-            FrameWidth = screens[value].Width;
-            FrameHeight = screens[value].Height;
+            var screenWidth = screens[value].Width;
+            var screenHeight = screens[value].Height;
+
+            FrameWidth = screenWidth;
+            FrameHeight = screenHeight;
+
+            BitRate = GetBitRate(FrameWidth, FrameHeight, BitRateMode);
+
+            AvailableFrameSizes.Clear();
+            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth), (int)(screenHeight)));
+            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.8), (int)(screenHeight * 0.8)));
+            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.75), (int)(screenHeight * 0.75)));
+            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.5), (int)(screenHeight * 0.5)));
+            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.4), (int)(screenHeight * 0.4)));
+            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.25), (int)(screenHeight * 0.25)));
+
+            FrameSize = AvailableFrameSizes[0];
         }
+    }
+
+    partial void OnFrameSizeChanged(DisplayResolution value)
+    {
+        FrameWidth = value.Width;
+        FrameHeight = value.Height;
+
+        BitRate = GetBitRate(FrameWidth, FrameHeight, BitRateMode);
+    }
+
+    partial void OnBitRateModeChanged(BitRateMode value)
+    {
+        BitRate = GetBitRate(FrameWidth, FrameHeight, BitRateMode);
     }
 
     [RelayCommand]

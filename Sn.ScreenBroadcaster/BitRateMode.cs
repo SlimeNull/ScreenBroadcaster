@@ -1,8 +1,8 @@
 ﻿namespace Sn.ScreenBroadcaster;
 
-public enum BitRateSize
+public enum BitRateMode
 {
-    Small,
-    Medium,
+    Normal,
     Large,
+    Small,
 }

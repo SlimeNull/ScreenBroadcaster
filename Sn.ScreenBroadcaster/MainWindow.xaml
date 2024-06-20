@@ -98,30 +98,57 @@
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
                             <TextBlock Text="Width: " />
-                            <TextBox Text="{Binding FrameWidth,UpdateSourceTrigger=PropertyChanged}" />
+                            <ComboBox ItemsSource="{Binding AvailableConfigModes}"
+                                      SelectedItem="{Binding EncodingConfigMode}"/>
                         </StackPanel>
-                        <StackPanel>
-                            <TextBlock Text="Height: " />
-                            <TextBox Text="{Binding FrameHeight,UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                        <StackPanel>
-                            <TextBlock Text="Max Frame Rate: " />
-                            <TextBox Text="{Binding MaxFrameRate,UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                        <StackPanel>
-                            <TextBlock Text="BitRate: " />
-                            <TextBox Text="{Binding BitRate,UpdateSourceTrigger=PropertyChanged}" />
-                        </StackPanel>
-                        <StackPanel >
-                            <TextBlock Text="Codec: " />
-                            <ComboBox ItemsSource="{Binding AvailableCodecList}"
+                        <ws:ConditionalControl Condition="{Binding EncodingConfigMode,Converter={x:Static ws:EqualConverter.Instance},ConverterParameter={x:Static local:ConfigMode.Simple}}">
+                            <ws:ConditionalControl.ContentWhenTrue>
+                                <ws:StackPanel Spacing="8">
+                                    <StackPanel>
+                                        <TextBlock Text="Size: "/>
+                                        <ComboBox ItemsSource="{Binding AvailableFrameSizes}"
+                                                  SelectedItem="{Binding FrameSize}"
+                                                  SelectedIndex="0"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="BitRate: "/>
+                                        <ComboBox ItemsSource="{Binding AvailableBitRateModes}"
+                                                  SelectedItem="{Binding BitRateMode}"
+                                                  SelectedIndex="0"/>
+                                    </StackPanel>
+                                </ws:StackPanel>
+                            </ws:ConditionalControl.ContentWhenTrue>
+                            <ws:ConditionalControl.ContentWhenFalse>
+                                <ws:StackPanel Spacing="8">
+                                    <StackPanel>
+                                        <TextBlock Text="Width: " />
+                                        <TextBox Text="{Binding FrameWidth,UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Height: " />
+                                        <TextBox Text="{Binding FrameHeight,UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Max Frame Rate: " />
+                                        <TextBox Text="{Binding MaxFrameRate,UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="BitRate: " />
+                                        <TextBox Text="{Binding BitRate,UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <StackPanel >
+                                        <TextBlock Text="Codec: " />
+                                        <ComboBox ItemsSource="{Binding AvailableCodecList}"
                                       SelectedValue="{Binding CodecId}" />
-                        </StackPanel>
-                        <StackPanel>
-                            <TextBlock Text="Pixel Format: " />
-                            <ComboBox ItemsSource="{Binding AvailablePixelFormatList}"
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Pixel Format: " />
+                                        <ComboBox ItemsSource="{Binding AvailablePixelFormatList}"
                                       SelectedItem="{Binding PixelFormat}" />
-                        </StackPanel>
+                                    </StackPanel>
+                                </ws:StackPanel>
+                            </ws:ConditionalControl.ContentWhenFalse>
+                        </ws:ConditionalControl>
                         <StackPanel>
                             <CheckBox Content="Show Mouse Cursor: "
                                       IsChecked="{Binding ShowMouseCursor}" />
