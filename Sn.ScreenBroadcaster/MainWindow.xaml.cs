@@ -360,7 +360,7 @@ public partial class MainWindow : Window
             var lastFrameTime = DateTimeOffset.MinValue;
             var maxFrameRate = MaxFrameRate;
             var showMouseCursor = ShowMouseCursor;
-            var cursorBitmap = default(SKBitmap);
+            var cursor = default(CursorLoader.CursorData?);
             var cursorX = default(int);
             var cursorY = default(int);
             var cursorWidth = default(int);
@@ -408,23 +408,34 @@ public partial class MainWindow : Window
 
                     if (showMouseCursor && PInvoke.GetCursorInfo(ref cursorInfo))
                     {
-                        cursorBitmap = _cursorLoader.GetCursor(cursorInfo.hCursor, out var xHotspot, out var yHotspot);
+                        cursor = _cursorLoader.GetCursor(cursorInfo.hCursor);
 
-                        if (cursorBitmap is not null)
+                        if (cursor is not null)
                         {
-                            cursorX = cursorInfo.ptScreenPos.X - _screenCapture.ScreenX - ((int)xHotspot * _screenCapture.DpiX / 96);
-                            cursorY = cursorInfo.ptScreenPos.Y - _screenCapture.ScreenY - ((int)yHotspot * _screenCapture.DpiY / 96);
+                            cursorX = cursorInfo.ptScreenPos.X - _screenCapture.ScreenX - ((int)cursor.Value.HotspotX * _screenCapture.DpiX / 96);
+                            cursorY = cursorInfo.ptScreenPos.Y - _screenCapture.ScreenY - ((int)cursor.Value.HotspotY * _screenCapture.DpiY / 96);
 
-                            cursorWidth = cursorBitmap.Width * _screenCapture.DpiX / 96;
-                            cursorHeight = cursorBitmap.Height * _screenCapture.DpiY / 96;
+                            cursorWidth = cursor.Value.Width * _screenCapture.DpiX / 96;
+                            cursorHeight = cursor.Value.Height * _screenCapture.DpiY / 96;
                         }
                     }
 
                     _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
 
-                    if (cursorBitmap is not null)
+                    if (cursor is not null)
                     {
-                        _skSurface.Canvas.DrawBitmap(cursorBitmap, new SKRect(cursorX, cursorY, cursorX + cursorWidth, cursorY + cursorHeight));
+                        if (cursor.Value.DirectBitmap is not null)
+                        {
+                            _skSurface.Canvas.DrawBitmap(cursor.Value.DirectBitmap, new SKRect(cursorX, cursorY, cursorX + cursorWidth, cursorY + cursorHeight));
+                        }
+
+                        if (cursor.Value.InvertBitmap is not null)
+                        {
+                            SKPaint paint = new SKPaint();
+                            paint.BlendMode = SKBlendMode.Difference;
+
+                            _skSurface.Canvas.DrawBitmap(cursor.Value.InvertBitmap, new SKRect(cursorX, cursorY, cursorX + cursorWidth, cursorY + cursorHeight), paint);
+                        }
                     }
 
                     var nowTime = DateTimeOffset.Now;

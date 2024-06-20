@@ -25,3 +25,5 @@ ICONINFO
 DrawIcon
 LoadCursor
 GetDIBits
+GetObject
+BITMAP
