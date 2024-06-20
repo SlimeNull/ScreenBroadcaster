@@ -392,7 +392,15 @@ public partial class MainWindow : Window
 #if NET6_0_OR_GREATER
                     var newClient = await _tcpListener.AcceptTcpClientAsync(cancellationToken);
 #else
-                    var newClient = await _tcpListener.AcceptTcpClientAsync();
+                    TcpClient newClient;
+                    using (cancellationToken.Register(() =>
+                    {
+                        _tcpListener.Stop();
+                    }))
+                    {
+
+                        newClient = await _tcpListener.AcceptTcpClientAsync();
+                    }
 #endif
                     var newClientStream = newClient.GetStream();
 
