@@ -25,6 +25,8 @@ namespace LibScreenCapture
         public int PixelBytes => _pixelBytes;
         public int Stride => _stride;
 
+        public int DpiX => _screenInfo.DpiX;
+        public int DpiY => _screenInfo.DpiY;
         public int ScreenX => _screenInfo.X;
         public int ScreenY => _screenInfo.Y;
         public int ScreenWidth => _screenInfo.Width;

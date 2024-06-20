@@ -26,6 +26,8 @@ namespace LibScreenCapture
         public int PixelBytes => _pixelBytes;
         public int Stride => _stride;
 
+        public int DpiX { get; }
+        public int DpiY { get; }
         public int ScreenX => _output.Description.DesktopBounds.Left;
         public int ScreenY => _output.Description.DesktopBounds.Top;
         public int ScreenWidth => _output.Description.DesktopBounds.Right - _output.Description.DesktopBounds.Left;
@@ -34,6 +36,14 @@ namespace LibScreenCapture
 
         public unsafe DirectScreenCapture(int displayIndex)
         {
+            var screenCount = ScreenInfo.GetScreenCount();
+            if (displayIndex < 0 || displayIndex >= screenCount)
+                throw new ArgumentOutOfRangeException(nameof(displayIndex));
+
+            var screens = ScreenInfo.GetScreens();
+            DpiX = screens[displayIndex].DpiX;
+            DpiY = screens[displayIndex].DpiY;
+
             var adapterIndex = 0;
 
             _factory = new Factory1();

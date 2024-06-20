@@ -1,11 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LibCommon;
@@ -18,6 +20,7 @@ using Sdcb.FFmpeg.Utils;
 using SkiaSharp;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Sn.ScreenBroadcaster;
 
@@ -102,6 +105,7 @@ public partial class MainWindow : Window
     };
 
     private IScreenCapture? _screenCapture;
+    private CursorLoader? _cursorLoader;
     private CodecContext? _videoEncoder;
     private SKSurface? _skSurface;
     private FrameData? _lastKeyFrame = null;
@@ -112,7 +116,6 @@ public partial class MainWindow : Window
     private Frame _yuvFrame = new Frame();
     private Packet _packetRef = new Packet();
     private VideoFrameConverter _videoFrameConverter = new();
-
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -172,6 +175,8 @@ public partial class MainWindow : Window
                 CaptureMethod.BitBlt => new GdiScreenCapture(DisplayIndex),
                 _ => throw new Exception("This would never happened."),
             };
+
+            _cursorLoader = new CursorLoader();
 
             // init SKSurface
             _skSurface = SKSurface.Create(new SKImageInfo(_screenCapture.ScreenWidth, _screenCapture.ScreenHeight, SKColorType.Bgra8888, SKAlphaType.Opaque), _screenCapture.DataPointer, _screenCapture.Stride);
@@ -240,6 +245,8 @@ public partial class MainWindow : Window
         _videoEncoder = null;
         _screenCapture?.Dispose();
         _screenCapture = null;
+        _cursorLoader?.Dispose();
+        _cursorLoader = null;
         _skSurface?.Dispose();
         _skSurface = null;
 
@@ -339,9 +346,13 @@ public partial class MainWindow : Window
         return Task.Run(() =>
         {
             if (_screenCapture is null ||
+                _cursorLoader is null ||
+                _skSurface is null ||
                 _videoEncoder is null ||
                 _cancellationTokenSource is null)
                 return;
+
+            _cursorLoader.Initialize();
 
             var pts = 0;
             var cancellationToken = _cancellationTokenSource.Token;
@@ -372,6 +383,7 @@ public partial class MainWindow : Window
                 mediaDictionary["tune"] = "ull";
             }
 
+
             try
             {
                 _videoEncoder.Open(null, mediaDictionary);
@@ -385,10 +397,23 @@ public partial class MainWindow : Window
 
                     _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
 
-                    if (showMouseCursor &&
-                        PInvoke.GetCursorPos(out var point))
+                    CURSORINFO cursorInfo = default;
+                    unsafe
                     {
+                        cursorInfo.cbSize = (uint)sizeof(CURSORINFO);
+                    }
 
+                    if (showMouseCursor &&
+                        PInvoke.GetCursorInfo(ref cursorInfo) &&
+                        _cursorLoader.GetCursor(cursorInfo.hCursor, out var xHotspot, out var yHotspot) is { } cursorBitmap)
+                    {
+                        var targetX = cursorInfo.ptScreenPos.X - _screenCapture.ScreenX - (xHotspot * _screenCapture.DpiX / 96);
+                        var targetY = cursorInfo.ptScreenPos.Y - _screenCapture.ScreenY - (yHotspot * _screenCapture.DpiY / 96);
+
+                        var targetWidth = cursorBitmap.Width * _screenCapture.DpiX / 96;
+                        var targetHeight = cursorBitmap.Height * _screenCapture.DpiY / 96;
+
+                        _skSurface.Canvas.DrawBitmap(cursorBitmap, new SKRect(targetX, targetY, targetX + targetWidth, targetY + targetHeight));
                     }
 
                     var nowTime = DateTimeOffset.Now;
