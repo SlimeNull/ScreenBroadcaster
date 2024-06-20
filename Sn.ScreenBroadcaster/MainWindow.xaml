@@ -97,7 +97,7 @@
                              IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
-                            <TextBlock Text="Width: " />
+                            <TextBlock Text="Config Mode: " />
                             <ComboBox ItemsSource="{Binding AvailableConfigModes}"
                                       SelectedItem="{Binding EncodingConfigMode}"/>
                         </StackPanel>
