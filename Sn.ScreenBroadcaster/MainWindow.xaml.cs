@@ -360,6 +360,11 @@ public partial class MainWindow : Window
             var lastFrameTime = DateTimeOffset.MinValue;
             var maxFrameRate = MaxFrameRate;
             var showMouseCursor = ShowMouseCursor;
+            var cursorBitmap = default(SKBitmap);
+            var cursorX = default(int);
+            var cursorY = default(int);
+            var cursorWidth = default(int);
+            var cursorHeight = default(int);
 
             if (maxFrameRate == 0)
                 maxFrameRate = 60;
@@ -395,25 +400,31 @@ public partial class MainWindow : Window
                         // wait
                     }
 
-                    _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
-
                     CURSORINFO cursorInfo = default;
                     unsafe
                     {
                         cursorInfo.cbSize = (uint)sizeof(CURSORINFO);
                     }
 
-                    if (showMouseCursor &&
-                        PInvoke.GetCursorInfo(ref cursorInfo) &&
-                        _cursorLoader.GetCursor(cursorInfo.hCursor, out var xHotspot, out var yHotspot) is { } cursorBitmap)
+                    if (showMouseCursor && PInvoke.GetCursorInfo(ref cursorInfo))
                     {
-                        var targetX = cursorInfo.ptScreenPos.X - _screenCapture.ScreenX - (xHotspot * _screenCapture.DpiX / 96);
-                        var targetY = cursorInfo.ptScreenPos.Y - _screenCapture.ScreenY - (yHotspot * _screenCapture.DpiY / 96);
+                        cursorBitmap = _cursorLoader.GetCursor(cursorInfo.hCursor, out var xHotspot, out var yHotspot);
 
-                        var targetWidth = cursorBitmap.Width * _screenCapture.DpiX / 96;
-                        var targetHeight = cursorBitmap.Height * _screenCapture.DpiY / 96;
+                        if (cursorBitmap is not null)
+                        {
+                            cursorX = cursorInfo.ptScreenPos.X - _screenCapture.ScreenX - ((int)xHotspot * _screenCapture.DpiX / 96);
+                            cursorY = cursorInfo.ptScreenPos.Y - _screenCapture.ScreenY - ((int)yHotspot * _screenCapture.DpiY / 96);
 
-                        _skSurface.Canvas.DrawBitmap(cursorBitmap, new SKRect(targetX, targetY, targetX + targetWidth, targetY + targetHeight));
+                            cursorWidth = cursorBitmap.Width * _screenCapture.DpiX / 96;
+                            cursorHeight = cursorBitmap.Height * _screenCapture.DpiY / 96;
+                        }
+                    }
+
+                    _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
+
+                    if (cursorBitmap is not null)
+                    {
+                        _skSurface.Canvas.DrawBitmap(cursorBitmap, new SKRect(cursorX, cursorY, cursorX + cursorWidth, cursorY + cursorHeight));
                     }
 
                     var nowTime = DateTimeOffset.Now;

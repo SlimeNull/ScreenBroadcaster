@@ -144,7 +144,6 @@ namespace Sn.ScreenBroadcaster
                             MessageBox.Show(this, "Remote server version does not match current client version", "Version Issue", MessageBoxButton.OK, MessageBoxImage.Error);
                             _ = StopAndClose();
                         });
-                        _ = StopAndClose();
                     }
 
                     if (_videoDecoder is not null)
