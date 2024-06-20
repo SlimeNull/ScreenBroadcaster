@@ -214,33 +214,10 @@ namespace Sn.ScreenBroadcaster
             PInvoke.DeleteObject(hColorBitmap);
 
             return result;
-
-            //int ret = PInvoke.GetDIBits(hDC, hColorBitmap, 0, 0, null, &bitmapInfo, DIB_USAGE.DIB_RGB_COLORS);
-            //if (ret != 1)
-            //{
-            //    return null;
-            //}
-
-            //var width = bitmapInfo.bmiHeader.biWidth;
-            //var height = bitmapInfo.bmiHeader.biHeight;
-            //var maskBuffer = stackalloc byte[width * height];
-
-            //SKBitmap skColorBitmap = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-
-            //// Fill Color Bitmap
-            //bitmapInfo.bmiHeader.biHeight = -bitmapInfo.bmiHeader.biHeight;
-            //PInvoke.GetDIBits(hDC, hColorBitmap, 0, (uint)height, (void*)skColorBitmap.GetPixels(), &bitmapInfo, DIB_USAGE.DIB_RGB_COLORS);
-
-            //// Mask
-            //bitmapInfo = default;
-            //bitmapInfo.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
-            //PInvoke.GetDIBits(hDC, hMaskBitmap, 0, 0, null, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
-            //PInvoke.GetDIBits(hDC, hMaskBitmap, 0, (uint)height, maskBuffer, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
         }
 
         public unsafe void Initialize()
         {
-            int index = 0;
             foreach (var cursorName in _cursors)
             {
                 var hCursor = PInvoke.LoadCursor(HINSTANCE.Null, cursorName);
@@ -253,8 +230,6 @@ namespace Sn.ScreenBroadcaster
                 if (LoadCursor(hCursor) is { } cursorData)
                 {
                     _cache[hCursor] = cursorData;
-                    using var fs = File.Create($"Origin_Cursor{index++}.png");
-                    cursorData.DirectBitmap?.Encode(fs, SKEncodedImageFormat.Png, 0);
                 }
             }
         }

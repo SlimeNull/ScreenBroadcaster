@@ -10,7 +10,8 @@
     <LangVersion>12</LangVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Authors>SlimeNull</Authors>
-    <Copyright>Copyright 2024 SlimeNull</Copyright>
+    <Copyright>(C) SlimeNull</Copyright>
+    
   </PropertyGroup>
 
   <ItemGroup>

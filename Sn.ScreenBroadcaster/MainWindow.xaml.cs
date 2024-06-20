@@ -192,6 +192,7 @@ public partial class MainWindow : Window
             AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.4), (int)(screenHeight * 0.4)));
             AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.25), (int)(screenHeight * 0.25)));
 
+            FrameSize = default;
             FrameSize = AvailableFrameSizes[0];
         }
     }
