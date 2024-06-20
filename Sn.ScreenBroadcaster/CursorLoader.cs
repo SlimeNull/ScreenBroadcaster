@@ -9,9 +9,9 @@ namespace Sn.ScreenBroadcaster
 {
     public class CursorLoader : IDisposable
     {
-        public static unsafe bool GetCursurMaskValue(int maskWidth, int maskHeight, byte* maskData, int x, int y)
+        public static unsafe bool GetCursorMaskValue(int stride, byte* maskData, int x, int y)
         {
-            var bitPosition = maskWidth * y + x;
+            var bitPosition = stride * y * 8 + x;
             var bytePosition = bitPosition / 8;
             var bitShift = bitPosition % 8;
 
@@ -46,7 +46,13 @@ namespace Sn.ScreenBroadcaster
         {
             var iconInfo = new ICONINFO();
             HICON hIcon = *(HICON*)&hCursor;
-            PInvoke.GetIconInfo(hIcon, &iconInfo);
+            var iconInfoOk = PInvoke.GetIconInfo(hIcon, &iconInfo);
+
+            if (!iconInfoOk ||
+                iconInfo.hbmMask == HBITMAP.Null)
+            {
+                return null;
+            }
 
             HBITMAP hMaskBitmap = iconInfo.hbmMask;
             HBITMAP hColorBitmap = iconInfo.hbmColor;
@@ -78,18 +84,19 @@ namespace Sn.ScreenBroadcaster
                 bitmapInfo.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
 
                 // mask
-                var maskBuffer = stackalloc byte[cursorWidth * cursorHeight / 8];
-                PInvoke.GetDIBits(hDC, hMaskBitmap, 0, 0, null, &bitmapInfo, DIB_USAGE.DIB_RGB_COLORS);
+                PInvoke.GetDIBits(hDC, hMaskBitmap, 0, 0, null, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
+
+                var maskBuffer = stackalloc byte[(int)bitmapInfo.bmiHeader.biSizeImage];
 
                 bitmapInfo.bmiHeader.biHeight = -bitmapInfo.bmiHeader.biHeight;
-                PInvoke.GetDIBits(hDC, hMaskBitmap, 0, (uint)cursorHeight, maskBuffer, &bitmapInfo, DIB_USAGE.DIB_RGB_COLORS);
+                PInvoke.GetDIBits(hDC, hMaskBitmap, 0, (uint)cursorHeight, maskBuffer, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
 
                 for (int y = 0; y < colorBitmap.Height; y++)
                 {
                     for (int x = 0; x < colorBitmap.Width; x++)
                     {
                         var color = colorBitmap.GetPixel(x, y);
-                        var maskValue = GetCursurMaskValue(maskBitmapInfo.bmWidth, maskBitmapInfo.bmHeight, maskBuffer, x, y);
+                        var maskValue = GetCursorMaskValue(maskBitmapInfo.bmWidthBytes, maskBuffer, x, y);
                         if (maskValue)
                         {
                             color = color.WithAlpha(0);
@@ -107,10 +114,6 @@ namespace Sn.ScreenBroadcaster
                 var cursorHeight = colorBitmapInfo.bmHeight / 2;
 
                 var colorBuffer = stackalloc byte[colorBitmapInfo.bmWidth * colorBitmapInfo.bmHeight / 8];
-                var maskBuffer = stackalloc byte[maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8];
-
-                var andMaskPtr = maskBuffer;
-                var orMaskPtr = maskBuffer + (maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2);
 
                 var bitmapInfo = default(BITMAPINFO);
                 bitmapInfo.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
@@ -124,6 +127,11 @@ namespace Sn.ScreenBroadcaster
                 // fill mask
                 PInvoke.GetDIBits(hDC, hMaskBitmap, 0, 0, null, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
 
+                var maskBuffer = stackalloc byte[(int)bitmapInfo.bmiHeader.biSizeImage];
+
+                var andMaskPtr = maskBuffer;
+                var orMaskPtr = maskBuffer + (maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2);
+
                 bitmapInfo.bmiHeader.biHeight = -bitmapInfo.bmiHeader.biHeight;
                 PInvoke.GetDIBits(hDC, hMaskBitmap, 0, (uint)colorBitmapInfo.bmHeight, maskBuffer, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
 
@@ -134,7 +142,7 @@ namespace Sn.ScreenBroadcaster
                     for (int x = 0; x < colorBitmap.Width; x++)
                     {
                         var color = colorBitmap.GetPixel(x, y);
-                        var maskValue = GetCursurMaskValue(colorBitmapInfo.bmWidth, colorBitmapInfo.bmHeight, colorBuffer, x, y);
+                        var maskValue = GetCursorMaskValue(maskBitmapInfo.bmWidthBytes, colorBuffer, x, y);
 
                         if (maskValue)
                         {
@@ -152,16 +160,16 @@ namespace Sn.ScreenBroadcaster
                 var cursorWidth = maskBitmapInfo.bmWidth;
                 var cursorHeight = maskBitmapInfo.bmHeight / 2;
 
-                var maskBuffer = stackalloc byte[maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8];
-
-                var andMaskPtr = maskBuffer;
-                var orMaskPtr = maskBuffer + (maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2);
-
                 var bitmapInfo = default(BITMAPINFO);
                 bitmapInfo.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
 
                 // fill mask
                 PInvoke.GetDIBits(hDC, hMaskBitmap, 0, 0, null, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
+
+                var maskBuffer = stackalloc byte[(int)bitmapInfo.bmiHeader.biSizeImage];
+
+                var andMaskPtr = maskBuffer;
+                var orMaskPtr = maskBuffer + (maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2);
 
                 bitmapInfo.bmiHeader.biHeight = -bitmapInfo.bmiHeader.biHeight;
                 PInvoke.GetDIBits(hDC, hMaskBitmap, 0, (uint)maskBitmapInfo.bmHeight, maskBuffer, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
@@ -174,8 +182,8 @@ namespace Sn.ScreenBroadcaster
                     for (int x = 0; x < directBitmap.Width; x++)
                     {
                         var color = directBitmap.GetPixel(x, y);
-                        var andMaskValue = GetCursurMaskValue(cursorWidth, cursorHeight, andMaskPtr, x, y);
-                        var xorMaskValue = GetCursurMaskValue(cursorWidth, cursorHeight, orMaskPtr, x, y);
+                        var andMaskValue = GetCursorMaskValue(maskBitmapInfo.bmWidthBytes, andMaskPtr, x, y);
+                        var xorMaskValue = GetCursorMaskValue(maskBitmapInfo.bmWidthBytes, orMaskPtr, x, y);
 
                         if (!andMaskValue)
                         {

@@ -332,6 +332,7 @@ public partial class MainWindow : Window
             try
             {
                 client.TcpClient.Close();
+                client.TcpClient.Dispose();
             }
             catch { }
         }
@@ -483,7 +484,9 @@ public partial class MainWindow : Window
                         cursorInfo.cbSize = (uint)sizeof(CURSORINFO);
                     }
 
-                    if (showMouseCursor && PInvoke.GetCursorInfo(ref cursorInfo))
+                    if (showMouseCursor && 
+                        PInvoke.GetCursorInfo(ref cursorInfo) &&
+                        cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
                     {
                         cursor = _cursorLoader.GetCursor(cursorInfo.hCursor);
 
