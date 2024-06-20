@@ -48,7 +48,7 @@ namespace LibScreenCapture
 
             _factory = new Factory1();
             _adapter = _factory.GetAdapter1(adapterIndex);
-            while (_adapter.Outputs.Length < displayIndex)
+            while (_adapter.Outputs.Length <= displayIndex)
             {
                 adapterIndex++;
                 displayIndex -= _adapter.Outputs.Length;
