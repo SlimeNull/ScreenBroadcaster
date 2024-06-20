@@ -11,6 +11,7 @@
         WindowStartupLocation="CenterScreen"
         Icon="Icon64.png"
         Closing="Window_Closing"
+        d:Height="1500"
         d:DataContext="{d:DesignInstance Type=local:MainWindow}">
 
     <Window.Resources>
@@ -140,12 +141,12 @@
                                     <StackPanel >
                                         <TextBlock Text="Codec: " />
                                         <ComboBox ItemsSource="{Binding AvailableCodecList}"
-                                      SelectedValue="{Binding CodecId}" />
+                                                  SelectedValue="{Binding CodecId}" />
                                     </StackPanel>
                                     <StackPanel>
                                         <TextBlock Text="Pixel Format: " />
                                         <ComboBox ItemsSource="{Binding AvailablePixelFormatList}"
-                                      SelectedItem="{Binding PixelFormat}" />
+                                                  SelectedItem="{Binding PixelFormat}" />
                                     </StackPanel>
                                 </ws:StackPanel>
                             </ws:ConditionalControl.ContentWhenFalse>
@@ -168,6 +169,40 @@
                         <StackPanel>
                             <CheckBox Content="Throws Key Frame: "
                                       IsChecked="{Binding ThrowsKeyFrame}" />
+                        </StackPanel>
+                    </ws:StackPanel>
+                </ws:GroupBox>
+
+                <ws:GroupBox Header="About"
+                             Padding="8">
+                    <ws:StackPanel Spacing="4">
+                        <ws:StackPanel Orientation="Horizontal"
+                                       Spacing="4">
+                            <TextBlock Text="Author:"/>
+                            <TextBlock>
+                                <Hyperlink NavigateUri="https://github.com/SlimeNull"
+                                           Click="Hyperlink_Click">SlimeNull</Hyperlink>
+                            </TextBlock>
+                        </ws:StackPanel>
+                        <ws:StackPanel Orientation="Horizontal"
+                                       Spacing="4">
+                            <TextBlock Text="Repository:"/>
+                            <TextBlock>
+                                <Hyperlink NavigateUri="https://github.com/SlimeNull/ScreenBroadcaster"
+                                           Click="Hyperlink_Click">https://github.com/SlimeNull/ScreenBroadcaster</Hyperlink>
+                            </TextBlock>
+                        </ws:StackPanel>
+                        <ws:StackPanel Orientation="Horizontal"
+                                       Spacing="4">
+                            <TextBlock Text="Version:"/>
+                            <TextBlock Text="{Binding AppVersion}"/>
+                        </ws:StackPanel>
+
+                        <StackPanel Margin="0 16 0 0">
+                            <TextBlock Text="Remark:"/>
+                            <TextBlock TextWrapping="Wrap">
+                                This program is completely open source and free of charge. You can download the latest version from the repository above.
+                            </TextBlock>
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>

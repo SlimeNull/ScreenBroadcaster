@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
@@ -7,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -96,6 +98,21 @@ public partial class MainWindow : Window
 
     [ObservableProperty]
     private bool _throwsKeyFrame = false;
+
+    public string AppVersion
+    {
+        get
+        {
+            string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "Unknown";
+            var splitIndex = version.IndexOf('+');
+            if (splitIndex != -1)
+            {
+                version = version.Substring(0, splitIndex);
+            }
+
+            return version;
+        }
+    }
 
     public ObservableCollection<ConfigMode> AvailableConfigModes { get; } = new()
     {
@@ -658,5 +675,24 @@ public partial class MainWindow : Window
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
         _ = Stop();
+    }
+
+    private void Hyperlink_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (sender is not Hyperlink hyperlink)
+                return;
+
+            Process.Start(new ProcessStartInfo()
+            {
+                FileName = hyperlink.NavigateUri.ToString(),
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Failed to open hyperlink", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }
