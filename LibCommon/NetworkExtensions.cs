@@ -22,7 +22,11 @@ namespace LibCommon
 
             while (received < buffer.Length)
             {
-                received += stream.Read(buffer.Slice(received, buffer.Length - received));
+                var currentReceived = stream.Read(buffer.Slice(received, buffer.Length - received));
+                if (currentReceived == 0)
+                    throw new EndOfStreamException();
+
+                received += currentReceived;
             }
 #else
             throw new NotSupportedException();

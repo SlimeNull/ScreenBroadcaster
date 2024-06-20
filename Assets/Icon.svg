@@ -1,0 +1,39 @@
+<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg">
+ <!-- Monitor -->
+ <!-- Stand -->
+ <!-- Arrow -->
+ <!-- Gradient for Monitor -->
+ <defs>
+  <!-- Gradient for Metal Stand -->
+  <linearGradient y2="100%" x2="100%" y1="0%" x1="0%" id="grad1">
+   <stop stop-color="#0078D4" offset="0%"/>
+   <stop stop-color="#005A9E" offset="100%"/>
+  </linearGradient>
+  <linearGradient y2="100%" x2="100%" y1="0%" x1="0%" id="metalGrad">
+   <stop stop-color="#CFD8DC" offset="0%"/>
+   <stop stop-color="#B0BEC5" offset="100%"/>
+  </linearGradient>
+ </defs>
+ <!-- Shadow -->
+ <!-- Filter for Shadow -->
+ <defs>
+  <filter y="0" x="0" id="shadow">
+   <feGaussianBlur stdDeviation="2" in="offOut" result="blurOut"/>
+  </filter>
+ </defs>
+ <g>
+  <title>Layer 1</title>
+  <!-- Shadow -->
+  <rect id="svg_6" filter="url(#shadow)" opacity="0.1" fill="black" rx="2" height="128" width="192" y="46.05404" x="32"/>
+  <!-- Blue background -->
+  <rect id="svg_1" fill="#0078D4" rx="8" height="128" width="192" y="46.05404" x="32"/>
+  <!-- Gradient -->
+  <rect id="svg_2" fill="url(#grad1)" rx="8" height="128" width="192" y="46.05404" x="32"/>
+  <!-- Stand -->
+  <rect id="svg_3" fill="#B0BEC5" rx="8" height="16" width="48" y="182.05404" x="104"/>
+  <!-- Metal -->
+  <rect id="svg_4" fill="url(#metalGrad)" rx="8" height="16" width="112" y="198.05404" x="72"/>
+  <!-- Arrow -->
+  <path id="svg_16" d="m196.622,136.55004c-7.31196,0 -13.23944,5.92782 -13.23944,13.23944c0,7.31177 5.92748,13.23944 13.23944,13.23944c7.31196,0 13.23944,-5.92767 13.23944,-13.23944c0,-7.31162 -5.92748,-13.23944 -13.23944,-13.23944zm-2.126,22.09877l-3.22125,-3.22169l5.63541,-5.63541l-5.63541,-5.63541l3.22125,-3.22175l8.85786,8.85761l-8.85786,8.85765z" fill="#008c4b"/>
+ </g>
+</svg>

@@ -9,6 +9,7 @@
         Title="Sn.ScreenBroadcaster"
         Height="380" Width="550"
         WindowStartupLocation="CenterScreen"
+        Icon="Icon64.png"
         Closing="Window_Closing"
         d:DataContext="{d:DesignInstance Type=local:MainWindow}">
 

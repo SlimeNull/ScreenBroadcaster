@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -181,6 +182,14 @@ namespace Sn.ScreenBroadcaster
                     _ = Dispatcher.BeginInvoke(() =>
                     {
                         MessageBox.Show(this, ex.Message, "Decoder Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                        _ = StopAndClose();
+                    });
+                }
+                catch (EndOfStreamException)
+                {
+                    _ = Dispatcher.BeginInvoke(() =>
+                    {
+                        MessageBox.Show(this, "Disconnected from remote server", "Network Issue", MessageBoxButton.OK, MessageBoxImage.Error);
                         _ = StopAndClose();
                     });
                 }

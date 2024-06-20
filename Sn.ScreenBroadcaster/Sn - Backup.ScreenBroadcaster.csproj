@@ -16,8 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Icon32.png" />
-    <None Remove="Icon64.png" />
     <None Remove="NativeMethods.txt" />
   </ItemGroup>
 
@@ -47,8 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Icon32.png" />
-    <Resource Include="Icon64.png" />
+    <Folder Include="NewFolder\" />
   </ItemGroup>
 
 </Project>

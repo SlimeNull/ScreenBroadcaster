@@ -8,6 +8,7 @@
         Closing="Window_Closing"
         Title="Sn.ScreenBroadcaster Client" Height="450" Width="800"
         WindowStartupLocation="CenterOwner"
+        Icon="Icon64.png"
         d:DataContext="{d:DesignInstance Type=local:ClientWindow}">
     <Grid>
         <Image Name="frameImage" 
