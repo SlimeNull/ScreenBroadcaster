@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Sdcb.FFmpeg" Version="5.1.2" />
-    <PackageReference Include="Sdcb.FFmpeg.runtime.windows-x64" Version="5.1.2" />
+    <PackageReference Include="Sdcb.FFmpeg" Version="7.0.0" />
+    <PackageReference Include="Sdcb.FFmpeg.runtime.windows-x64" Version="7.0.0" />
   </ItemGroup>
   
 </Project>
