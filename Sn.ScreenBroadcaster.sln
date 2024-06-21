@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibScreenCapture", "LibScre
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\TestConsole.csproj", "{E234355E-BD64-4157-BE5F-EE1AF0B6BB6C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServer", "TestServer\TestServer.csproj", "{60C4293A-85C6-403C-9D32-43E1E0BA70FE}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestWPF", "TestWPF\TestWPF.csproj", "{ACF4155B-04F0-4BDE-B431-D6D06C7465E3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sn.ScreenBroadcaster", "Sn.ScreenBroadcaster\Sn.ScreenBroadcaster.csproj", "{3C9377F9-9E01-4769-BCF5-6147F6539D3C}"
@@ -32,10 +30,6 @@ Global
 		{E234355E-BD64-4157-BE5F-EE1AF0B6BB6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E234355E-BD64-4157-BE5F-EE1AF0B6BB6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E234355E-BD64-4157-BE5F-EE1AF0B6BB6C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{60C4293A-85C6-403C-9D32-43E1E0BA70FE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ACF4155B-04F0-4BDE-B431-D6D06C7465E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{ACF4155B-04F0-4BDE-B431-D6D06C7465E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ACF4155B-04F0-4BDE-B431-D6D06C7465E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
