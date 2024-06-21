@@ -1,0 +1,34 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+    <s:String x:Key="String.AppShortName">ScreenBroadcaster</s:String>
+    <s:String x:Key="String.Connect">Connect</s:String>
+    <s:String x:Key="String.Broadcast">Broadcast</s:String>
+    <s:String x:Key="String.Stop">Stop</s:String>
+    <s:String x:Key="String.General">General</s:String>
+    <s:String x:Key="String.Address">Address</s:String>
+    <s:String x:Key="String.Port">Port</s:String>
+    <s:String x:Key="String.Capturing">Capturing</s:String>
+    <s:String x:Key="String.CaptureMethod">Capture Method</s:String>
+    <s:String x:Key="String.Screen">Screen</s:String>
+    <s:String x:Key="String.EncodingOrDecoding">Encoding / Decoding</s:String>
+    <s:String x:Key="String.ConfigMode">Config Mode</s:String>
+    <s:String x:Key="String.Size">Size</s:String>
+    <s:String x:Key="String.Width">Width</s:String>
+    <s:String x:Key="String.Height">Height</s:String>
+    <s:String x:Key="String.MaxFrameRate">Max Frame Rate</s:String>
+    <s:String x:Key="String.BitRate">BitRate</s:String>
+    <s:String x:Key="String.Codec">Codec</s:String>
+    <s:String x:Key="String.PixelFormat">Pixel Format</s:String>
+    <s:String x:Key="String.UseHardwareCodec">Use Hardware Codec</s:String>
+    <s:String x:Key="String.ShowMouseCursor">Show Mouse Cursor</s:String>
+    <s:String x:Key="String.Network">Network</s:String>
+    <s:String x:Key="String.CountForDroppingFrame">Count For Dropping Frame</s:String>
+    <s:String x:Key="String.DropsKeyFrame">Drops Key Frame</s:String>
+    <s:String x:Key="String.About">About</s:String>
+    <s:String x:Key="String.Author">Author</s:String>
+    <s:String x:Key="String.Repository">Repository</s:String>
+    <s:String x:Key="String.Version">Version</s:String>
+    <s:String x:Key="String.Remark">Remark</s:String>
+    <s:String x:Key="String.Content.Remark">This program is completely open source and free of charge. You can download the latest version from the repository above.</s:String>
+</ResourceDictionary>

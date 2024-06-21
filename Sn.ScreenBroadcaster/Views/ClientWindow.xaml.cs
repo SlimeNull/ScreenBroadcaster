@@ -154,7 +154,7 @@ namespace Sn.ScreenBroadcaster.Views
                         // throw new Exception("This would never happen");
                     }
 
-                    _videoDecoder = new CodecContext(Codec.FindDecoderById((Sdcb.FFmpeg.Raw.AVCodecID)screenInfo.CodecID))
+                    _videoDecoder = new CodecContext(FFmpegUtilities.FindBestDecoder((Sdcb.FFmpeg.Raw.AVCodecID)screenInfo.CodecID, _owner.UseHardwareCodec))
                     {
                         Width = screenInfo.Width,
                         Height = screenInfo.Height,

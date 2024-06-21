@@ -3,6 +3,8 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using LibScreenCapture;
+using Sdcb.FFmpeg.Codecs;
+using SharpDX.DXGI;
 using SkiaSharp;
 using Sn.ScreenBroadcaster.Utilities;
 using Spectre.Console;
@@ -10,6 +12,20 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
+
+var encoders = Codec.FindEncoders(Sdcb.FFmpeg.Raw.AVCodecID.H264);
+
+var factory = new Factory1();
+var adapters = factory.Adapters;
+
+bool hasNvidiaGPU = false;
+bool hasAmdGPU = false;
+foreach (var adapter in adapters)
+{
+    Console.WriteLine(adapter);
+}
+
+
 
 
 unsafe

@@ -41,7 +41,7 @@
                            Margin="24">
                 <ws:StackPanel Margin="0 48"
                                Spacing="16">
-                    <TextBlock Text="ScreenBroadcaster"
+                    <TextBlock Text="{DynamicResource String.AppShortName}"
                                HorizontalAlignment="Center"
                                FontSize="26"/>
 
@@ -57,53 +57,53 @@
                             </Style>
                         </ws:StackPanel.Resources>
 
-                        <ws:Button Content="Connect" Command="{Binding ConnectCommand}"
+                        <ws:Button Content="{DynamicResource String.Connect}" Command="{Binding ConnectCommand}"
                                    Visibility="{Binding BroadcastTask,Converter={StaticResource ValueIsNullToVisibilityConverter}}"/>
-                        <ws:Button Content="Broadcast" Command="{Binding StartCommand}"
+                        <ws:Button Content="{DynamicResource String.Broadcast}" Command="{Binding StartCommand}"
                                    Visibility="{Binding BroadcastTask,Converter={StaticResource ValueIsNullToVisibilityConverter}}"/>
-                        <ws:Button Content="Stop" Command="{Binding StopCommand}"
+                        <ws:Button Content="{DynamicResource String.Stop}" Command="{Binding StopCommand}"
                                    Visibility="{Binding BroadcastTask,Converter={StaticResource ValueIsNotNullToVisibilityConverter}}"/>
                     </ws:StackPanel>
                 </ws:StackPanel>
 
-                <ws:GroupBox Header="General"
+                <ws:GroupBox Header="{DynamicResource String.General}"
                              Padding="8"
                              IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
-                            <TextBlock Text="Adress: " />
+                            <TextBlock Text="{DynamicResource String.Address}" />
                             <TextBox Text="{Binding Address,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Port: " />
+                            <TextBlock Text="{DynamicResource String.Port}" />
                             <TextBox Text="{Binding Port,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
-                <ws:GroupBox Header="Capturing"
+                <ws:GroupBox Header="{DynamicResource String.Capturing}"
                              Padding="8"
                              IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
-                            <TextBlock Text="Capture Method: " />
+                            <TextBlock Text="{DynamicResource String.CaptureMethod}" />
                             <ComboBox ItemsSource="{Binding AvailableCaptureMethodList}"
                                       SelectedItem="{Binding CaptureMethod}" />
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Screen: " />
+                            <TextBlock Text="{DynamicResource String.Screen}" />
                             <ComboBox ItemsSource="{Binding AvailableScreens}"
                                       SelectedItem="{Binding Screen}"/>
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
-                <ws:GroupBox Header="Encoding"
+                <ws:GroupBox Header="{DynamicResource String.EncodingOrDecoding}"
                              Padding="8"
                              IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
-                            <TextBlock Text="Config Mode: " />
+                            <TextBlock Text="{DynamicResource String.ConfigMode}" />
                             <ComboBox ItemsSource="{Binding AvailableConfigModes}"
                                       SelectedItem="{Binding EncodingConfigMode}"/>
                         </StackPanel>
@@ -111,13 +111,13 @@
                             <ws:ConditionalControl.ContentWhenTrue>
                                 <ws:StackPanel Spacing="8">
                                     <StackPanel>
-                                        <TextBlock Text="Size: "/>
+                                        <TextBlock Text="{DynamicResource String.Size}"/>
                                         <ComboBox ItemsSource="{Binding AvailableFrameSizes}"
                                                   SelectedItem="{Binding FrameSize}"
                                                   SelectedIndex="0"/>
                                     </StackPanel>
                                     <StackPanel>
-                                        <TextBlock Text="BitRate: "/>
+                                        <TextBlock Text="{DynamicResource String.BitRate}"/>
                                         <ComboBox ItemsSource="{Binding AvailableBitRateModes}"
                                                   SelectedItem="{Binding BitRateMode}"
                                                   SelectedIndex="0"/>
@@ -127,62 +127,66 @@
                             <ws:ConditionalControl.ContentWhenFalse>
                                 <ws:StackPanel Spacing="8">
                                     <StackPanel>
-                                        <TextBlock Text="Width: " />
+                                        <TextBlock Text="{DynamicResource String.Width}" />
                                         <TextBox Text="{Binding FrameWidth,UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                     <StackPanel>
-                                        <TextBlock Text="Height: " />
+                                        <TextBlock Text="{DynamicResource String.Height}" />
                                         <TextBox Text="{Binding FrameHeight,UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                     <StackPanel>
-                                        <TextBlock Text="Max Frame Rate: " />
+                                        <TextBlock Text="{DynamicResource String.MaxFrameRate}" />
                                         <TextBox Text="{Binding MaxFrameRate,UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                     <StackPanel>
-                                        <TextBlock Text="BitRate: " />
+                                        <TextBlock Text="{DynamicResource String.BitRate}" />
                                         <TextBox Text="{Binding BitRate,UpdateSourceTrigger=PropertyChanged}" />
                                     </StackPanel>
                                     <StackPanel >
-                                        <TextBlock Text="Codec: " />
+                                        <TextBlock Text="{DynamicResource String.Codec}" />
                                         <ComboBox ItemsSource="{Binding AvailableCodecList}"
                                                   SelectedValue="{Binding CodecId}" />
                                     </StackPanel>
                                     <StackPanel>
-                                        <TextBlock Text="Pixel Format: " />
+                                        <TextBlock Text="{DynamicResource String.PixelFormat}" />
                                         <ComboBox ItemsSource="{Binding AvailablePixelFormatList}"
                                                   SelectedItem="{Binding PixelFormat}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <CheckBox Content="{DynamicResource String.UseHardwareCodec}"
+                                                  IsChecked="{Binding UseHardwareCodec}" />
                                     </StackPanel>
                                 </ws:StackPanel>
                             </ws:ConditionalControl.ContentWhenFalse>
                         </ws:ConditionalControl>
                         <StackPanel>
-                            <CheckBox Content="Show Mouse Cursor: "
+                            <CheckBox Content="{DynamicResource String.ShowMouseCursor}"
                                       IsChecked="{Binding ShowMouseCursor}" />
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
-                <ws:GroupBox Header="Network"
+                <ws:GroupBox Header="{DynamicResource String.Network}"
                              Padding="8"
                              IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
-                            <TextBlock Text="Count For Dropping Frame: " />
+                            <TextBlock Text="{DynamicResource String.CountForDroppingFrame}" />
                             <TextBox Text="{Binding CountForDroppingFrame,UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel>
-                            <CheckBox Content="Throws Key Frame: "
+                            <CheckBox Content="{DynamicResource String.DropsKeyFrame}"
                                       IsChecked="{Binding ThrowsKeyFrame}" />
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
-                <ws:GroupBox Header="About"
+                <ws:GroupBox Header="{DynamicResource String.About}"
                              Padding="8">
                     <ws:StackPanel Spacing="4">
                         <ws:StackPanel Orientation="Horizontal"
                                        Spacing="4">
-                            <TextBlock Text="Author:"/>
+                            <TextBlock Text="{DynamicResource String.Author}"/>
                             <TextBlock>
                                 <Hyperlink NavigateUri="https://github.com/SlimeNull"
                                            Click="Hyperlink_Click">SlimeNull</Hyperlink>
@@ -190,7 +194,7 @@
                         </ws:StackPanel>
                         <ws:StackPanel Orientation="Horizontal"
                                        Spacing="4">
-                            <TextBlock Text="Repository:"/>
+                            <TextBlock Text="{DynamicResource String.Repository}"/>
                             <TextBlock>
                                 <Hyperlink NavigateUri="https://github.com/SlimeNull/ScreenBroadcaster"
                                            Click="Hyperlink_Click">https://github.com/SlimeNull/ScreenBroadcaster</Hyperlink>
@@ -198,15 +202,14 @@
                         </ws:StackPanel>
                         <ws:StackPanel Orientation="Horizontal"
                                        Spacing="4">
-                            <TextBlock Text="Version:"/>
+                            <TextBlock Text="{DynamicResource String.Version}"/>
                             <TextBlock Text="{Binding AppVersion}"/>
                         </ws:StackPanel>
 
                         <StackPanel Margin="0 16 0 0">
-                            <TextBlock Text="Remark:"/>
-                            <TextBlock TextWrapping="Wrap">
-                                This program is completely open source and free of charge. You can download the latest version from the repository above.
-                            </TextBlock>
+                            <TextBlock Text="{DynamicResource String.Remark}"/>
+                            <TextBlock TextWrapping="Wrap"
+                                       Text="{DynamicResource String.Content.Remark}"/>
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>

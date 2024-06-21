@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 using System.Data;
+using System.Globalization;
 using System.Windows;
 using Windows.Win32;
 
@@ -18,6 +19,22 @@ public partial class App : Application
         }
 
         base.OnStartup(e);
+
+        if (Resources is null)
+        { 
+            Resources = new ResourceDictionary();
+        }
+
+        var currentCulture = CultureInfo.CurrentCulture;
+        if (currentCulture.Name == "zh-CN" ||
+            currentCulture.Name == "zh-Hans")
+        {
+            Resources.MergedDictionaries.Add(
+                new ResourceDictionary()
+                {
+                    Source = new Uri("/Translations/ZH_HANS.xaml", UriKind.Relative)
+                });
+        }
     }
 }
 

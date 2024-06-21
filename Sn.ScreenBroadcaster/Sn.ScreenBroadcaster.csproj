@@ -41,6 +41,8 @@
     <PackageReference Include="Sdcb.FFmpeg" Version="5.1.2" />
     <PackageReference Include="Sdcb.FFmpeg.runtime.windows-x64" Version="5.1.2" />
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+    <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -6,6 +6,9 @@
              StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Translations/EN_US.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
             <Style TargetType="{x:Type TextBox}"
                    BasedOn="{StaticResource {x:Type TextBox}}">
                 <Setter Property="Padding" Value="2"/>

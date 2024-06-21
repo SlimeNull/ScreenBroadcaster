@@ -1,0 +1,34 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+    <s:String x:Key="String.AppShortName">屏幕广播</s:String>
+    <s:String x:Key="String.Connect">连接</s:String>
+    <s:String x:Key="String.Broadcast">广播</s:String>
+    <s:String x:Key="String.Stop">停止</s:String>
+    <s:String x:Key="String.General">常规</s:String>
+    <s:String x:Key="String.Address">地址</s:String>
+    <s:String x:Key="String.Port">端口</s:String>
+    <s:String x:Key="String.Capturing">捕捉</s:String>
+    <s:String x:Key="String.CaptureMethod">捕捉方式</s:String>
+    <s:String x:Key="String.Screen">屏幕</s:String>
+    <s:String x:Key="String.EncodingOrDecoding">编解码</s:String>
+    <s:String x:Key="String.ConfigMode">配置模式</s:String>
+    <s:String x:Key="String.Size">大小</s:String>
+    <s:String x:Key="String.Width">宽度</s:String>
+    <s:String x:Key="String.Height">高度</s:String>
+    <s:String x:Key="String.MaxFrameRate">最大帧率</s:String>
+    <s:String x:Key="String.BitRate">比特率</s:String>
+    <s:String x:Key="String.Codec">编解码</s:String>
+    <s:String x:Key="String.PixelFormat">像素格式</s:String>
+    <s:String x:Key="String.UseHardwareCodec">使用硬件编解码器</s:String>
+    <s:String x:Key="String.ShowMouseCursor">显示鼠标光标</s:String>
+    <s:String x:Key="String.Network">网络</s:String>
+    <s:String x:Key="String.CountForDroppingFrame">丢帧所需数量</s:String>
+    <s:String x:Key="String.DropsKeyFrame">丢弃关键帧</s:String>
+    <s:String x:Key="String.About">关于</s:String>
+    <s:String x:Key="String.Author">作者</s:String>
+    <s:String x:Key="String.Repository">仓库</s:String>
+    <s:String x:Key="String.Version">版本</s:String>
+    <s:String x:Key="String.Remark">备注</s:String>
+    <s:String x:Key="String.Content.Remark">此程序是完全开源且免费的. 你可以从上方的仓库中下载此程序的最新版本.</s:String>
+</ResourceDictionary>

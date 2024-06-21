@@ -86,6 +86,9 @@ public partial class MainWindow : Window
     private AVPixelFormat _pixelFormat = AVPixelFormat.Yuv420p;
 
     [ObservableProperty]
+    private bool _useHardwareCodec = false;
+
+    [ObservableProperty]
     private bool _showMouseCursor = true;
 
     [ObservableProperty]
@@ -287,7 +290,7 @@ public partial class MainWindow : Window
             _skSurface = SKSurface.Create(new SKImageInfo(_screenCapture.ScreenWidth, _screenCapture.ScreenHeight, SKColorType.Bgra8888, SKAlphaType.Opaque), _screenCapture.DataPointer, _screenCapture.Stride);
 
             // init encoding
-            _videoEncoder = new CodecContext(Codec.FindEncoderById(CodecId))
+            _videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncoder(CodecId, UseHardwareCodec))
             {
                 Width = FrameWidth,
                 Height = FrameHeight,
