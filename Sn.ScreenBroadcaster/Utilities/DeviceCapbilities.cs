@@ -9,10 +9,11 @@ using SharpDX.DXGI;
 
 namespace Sn.ScreenBroadcaster.Utilities
 {
-    public record struct DeviceCapabilities(bool IsAmdGpuAvailable, bool IsNvidiaGpuAvailable)
+    public record struct DeviceCapabilities(bool IsIntelGpuAvailable, bool IsAmdGpuAvailable, bool IsNvidiaGpuAvailable)
     {
         public static DeviceCapabilities Get()
         {
+            bool isIntelGpuAvailable = false;
             bool isAmdGpuAvailable = false;
             bool isNvidiaGpuAvailable = false;
 
@@ -23,7 +24,11 @@ namespace Sn.ScreenBroadcaster.Utilities
             {
                 using var adapter = factory.GetAdapter(i);
 
-                if (adapter.Description.Description.Contains("AMD"))
+                if (adapter.Description.Description.Contains("Intel"))
+                {
+                    isIntelGpuAvailable = true;
+                }
+                else if (adapter.Description.Description.Contains("AMD"))
                 {
                     isAmdGpuAvailable = true;
                 }
@@ -33,7 +38,7 @@ namespace Sn.ScreenBroadcaster.Utilities
                 }
             }
 
-            return new DeviceCapabilities(isAmdGpuAvailable, isNvidiaGpuAvailable);
+            return new DeviceCapabilities(isIntelGpuAvailable, isAmdGpuAvailable, isNvidiaGpuAvailable);
         }
     }
 }

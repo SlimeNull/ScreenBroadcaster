@@ -26,6 +26,13 @@ namespace Sn.ScreenBroadcaster.Utilities
                     return encoder;
                 }
             }
+            else if (deviceCapabilities.IsIntelGpuAvailable)
+            {
+                foreach (var encoder in Codec.FindEncoders(avCodecID).Where(codec => codec.Name.EndsWith("qsv", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return encoder;
+                }
+            }
 
             return Codec.FindEncoderById(avCodecID);
         }
@@ -46,7 +53,14 @@ namespace Sn.ScreenBroadcaster.Utilities
             }
             else if (deviceCapabilities.IsNvidiaGpuAvailable)
             {
-                foreach (var decoder in Codec.FindDecoders(avCodecID).Where(codec => codec.Name.EndsWith("nvenc", StringComparison.OrdinalIgnoreCase)))
+                foreach (var decoder in Codec.FindDecoders(avCodecID).Where(codec => codec.Name.EndsWith("cuvid", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return decoder;
+                }
+            }
+            else if (deviceCapabilities.IsIntelGpuAvailable)
+            {
+                foreach (var decoder in Codec.FindDecoders(avCodecID).Where(codec => codec.Name.EndsWith("qsv", StringComparison.OrdinalIgnoreCase)))
                 {
                     return decoder;
                 }
