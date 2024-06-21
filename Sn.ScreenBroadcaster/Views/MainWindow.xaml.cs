@@ -156,7 +156,6 @@ public partial class MainWindow : Window
     private CursorLoader? _cursorLoader;
     private CodecContext? _videoEncoder;
     private SKSurface? _skSurface;
-    private FrameData? _lastKeyFrame = null;
     private TcpListener? _tcpListener;
     private readonly List<TcpClientInfo> _clients = new();
 
@@ -433,16 +432,6 @@ public partial class MainWindow : Window
                         newClientStream.WriteStruct(screenInfo);
                     }
 
-                    while (_lastKeyFrame is null)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            return;
-
-                        Thread.Sleep(1);
-                    }
-
-                    _lastKeyFrame.Value.WriteToStream(newClientStream);
-
                     lock (_clients)
                     {
                         _clients.Add(new TcpClientInfo(newClient, new()));
@@ -596,6 +585,7 @@ public partial class MainWindow : Window
                         return;
                     }
 
+                    bool isFirstFrame = true;
                     foreach (var packet in _videoEncoder.EncodeFrame(_yuvFrame, _packetRef))
                     {
                         byte[] packetBytes = new byte[packet.Data.Length];
@@ -614,15 +604,12 @@ public partial class MainWindow : Window
 
                         framePacketBytes.Add(packetBytes);
 
-                        if ((packet.Flags & ffmpeg.AV_PKT_FLAG_KEY) != 0)
+                        if (isFirstFrame && (packet.Flags & ffmpeg.AV_PKT_FLAG_KEY) != 0)
                         {
                             isKeyFrame = true;
                         }
-                    }
 
-                    if (isKeyFrame)
-                    {
-                        _lastKeyFrame = new FrameData(timestamp, true, framePacketBytes);
+                        isFirstFrame = false;
                     }
 
                     if (framePacketBytes.Count != 0)

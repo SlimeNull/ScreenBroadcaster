@@ -37,6 +37,8 @@ namespace Sn.ScreenBroadcaster.Views
     {
         private readonly MainWindow _owner;
 
+        private bool _firstFrameDecoded;
+
         private TcpClient? _tcpClient;
         private CodecContext? _videoDecoder;
         private VideoFrameConverter? _videoFrameConverter;
@@ -237,6 +239,14 @@ namespace Sn.ScreenBroadcaster.Views
                                 continue;
                             }
 
+                            if (!_firstFrameDecoded && !frame.IsKeyFrame)
+                            {
+                                continue;
+                            }
+
+                            _firstFrameDecoded = true;
+
+                            bool isFirstPacket = true;
                             foreach (var packetBytes in frame.Packets)
                             {
                                 unsafe
@@ -248,7 +258,13 @@ namespace Sn.ScreenBroadcaster.Views
 
                                         using Packet packet = Packet.FromNative(&avPacket, false);
 
+                                        if (isFirstPacket && frame.IsKeyFrame)
+                                        {
+                                            packet.Flags = 1;
+                                        }
+
                                         _videoDecoder.SendPacket(packet);
+                                        isFirstPacket = false;
                                     }
 
                                     var codecResult = _videoDecoder.ReceiveFrame(_yuvFrame);
