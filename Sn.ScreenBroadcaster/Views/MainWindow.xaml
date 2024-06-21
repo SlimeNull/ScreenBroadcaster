@@ -1,15 +1,16 @@
-﻿<Window x:Class="Sn.ScreenBroadcaster.MainWindow"
+﻿<Window x:Class="Sn.ScreenBroadcaster.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Sn.ScreenBroadcaster"
+        xmlns:local="clr-namespace:Sn.ScreenBroadcaster.Views"
+        xmlns:data="clr-namespace:Sn.ScreenBroadcaster.Data"
         xmlns:ws="https://schemas.elecho.dev/wpfsuite"
         mc:Ignorable="d"
         Title="Sn.ScreenBroadcaster"
         Height="380" Width="550"
         WindowStartupLocation="CenterScreen"
-        Icon="Icon64.png"
+        Icon="/Assets/Icon64.png"
         Closing="Window_Closing"
         d:Height="1500"
         d:DataContext="{d:DesignInstance Type=local:MainWindow}">
@@ -88,8 +89,9 @@
                                       SelectedItem="{Binding CaptureMethod}" />
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Display Index: " />
-                            <TextBox Text="{Binding DisplayIndex,UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="Screen: " />
+                            <ComboBox ItemsSource="{Binding AvailableScreens}"
+                                      SelectedItem="{Binding Screen}"/>
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
@@ -103,7 +105,7 @@
                             <ComboBox ItemsSource="{Binding AvailableConfigModes}"
                                       SelectedItem="{Binding EncodingConfigMode}"/>
                         </StackPanel>
-                        <ws:ConditionalControl Condition="{Binding EncodingConfigMode,Converter={x:Static ws:EqualConverter.Instance},ConverterParameter={x:Static local:ConfigMode.Simple}}">
+                        <ws:ConditionalControl Condition="{Binding EncodingConfigMode,Converter={x:Static ws:EqualConverter.Instance},ConverterParameter={x:Static data:ConfigMode.Simple}}">
                             <ws:ConditionalControl.ContentWhenTrue>
                                 <ws:StackPanel Spacing="8">
                                     <StackPanel>

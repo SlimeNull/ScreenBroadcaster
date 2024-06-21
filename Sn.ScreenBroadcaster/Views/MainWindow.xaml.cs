@@ -12,7 +12,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LibCommon;
 using LibScreenCapture;
 using Sdcb.FFmpeg.Codecs;
 using Sdcb.FFmpeg.Raw;
@@ -20,11 +19,13 @@ using Sdcb.FFmpeg.Swscales;
 using Sdcb.FFmpeg.Toolboxs.Extensions;
 using Sdcb.FFmpeg.Utils;
 using SkiaSharp;
+using Sn.ScreenBroadcaster.Data;
+using Sn.ScreenBroadcaster.Utilities;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace Sn.ScreenBroadcaster;
+namespace Sn.ScreenBroadcaster.Views;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -43,8 +44,9 @@ public partial class MainWindow : Window
 
         DataContext = this;
         InitializeComponent();
+        LoadScreens();
 
-        DisplayIndex = 0;
+        Screen = AvailableScreens.FirstOrDefault();
     }
 
     [ObservableProperty]
@@ -57,7 +59,7 @@ public partial class MainWindow : Window
     private CaptureMethod _captureMethod = CaptureMethod.DesktopDuplication;
 
     [ObservableProperty]
-    private int _displayIndex = -1;
+    private ScreenInfo _screen;
 
     [ObservableProperty]
     private ConfigMode _encodingConfigMode = ConfigMode.Simple;
@@ -113,6 +115,8 @@ public partial class MainWindow : Window
             return version;
         }
     }
+
+    public ObservableCollection<ScreenInfo> AvailableScreens { get; } = new();
 
     public ObservableCollection<ConfigMode> AvailableConfigModes { get; } = new()
     {
@@ -170,6 +174,16 @@ public partial class MainWindow : Window
     [ObservableProperty]
     private Task? _broadcastTask;
 
+    private void LoadScreens()
+    {
+        AvailableScreens.Clear();
+
+        foreach (var screen in ScreenInfo.GetScreens())
+        {
+            AvailableScreens.Add(screen);
+        }
+    }
+
     private int GetBitRate(int width, int height, BitRateMode mode)
     {
         var areaSize = (double)(width * height);
@@ -187,31 +201,26 @@ public partial class MainWindow : Window
         return (int)(baseBitRate * rate);
     }
 
-    partial void OnDisplayIndexChanged(int value)
+    partial void OnScreenChanged(ScreenInfo value)
     {
-        var screens = ScreenInfo.GetScreens();
+        var screenWidth = value.Width;
+        var screenHeight = value.Height;
 
-        if (value >= 0 && value < screens.Length)
-        {
-            var screenWidth = screens[value].Width;
-            var screenHeight = screens[value].Height;
+        FrameWidth = screenWidth;
+        FrameHeight = screenHeight;
 
-            FrameWidth = screenWidth;
-            FrameHeight = screenHeight;
+        BitRate = GetBitRate(FrameWidth, FrameHeight, BitRateMode);
 
-            BitRate = GetBitRate(FrameWidth, FrameHeight, BitRateMode);
+        AvailableFrameSizes.Clear();
+        AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth), (int)(screenHeight)));
+        AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.8), (int)(screenHeight * 0.8)));
+        AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.75), (int)(screenHeight * 0.75)));
+        AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.5), (int)(screenHeight * 0.5)));
+        AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.4), (int)(screenHeight * 0.4)));
+        AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.25), (int)(screenHeight * 0.25)));
 
-            AvailableFrameSizes.Clear();
-            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth), (int)(screenHeight)));
-            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.8), (int)(screenHeight * 0.8)));
-            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.75), (int)(screenHeight * 0.75)));
-            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.5), (int)(screenHeight * 0.5)));
-            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.4), (int)(screenHeight * 0.4)));
-            AvailableFrameSizes.Add(new DisplayResolution((int)(screenWidth * 0.25), (int)(screenHeight * 0.25)));
-
-            FrameSize = default;
-            FrameSize = AvailableFrameSizes[0];
-        }
+        FrameSize = default;
+        FrameSize = AvailableFrameSizes[0];
     }
 
     partial void OnFrameSizeChanged(DisplayResolution value)
@@ -261,13 +270,21 @@ public partial class MainWindow : Window
             return;
         }
 
+        var displayIndex = AvailableScreens.IndexOf(Screen);
+
+        if (displayIndex == -1)
+        {
+            MessageBox.Show("Invalid Screen", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
         try
         {
             // capture
             _screenCapture = CaptureMethod switch
             {
-                CaptureMethod.DesktopDuplication => new DirectScreenCapture(DisplayIndex),
-                CaptureMethod.BitBlt => new GdiScreenCapture(DisplayIndex),
+                CaptureMethod.DesktopDuplication => new DirectScreenCapture(displayIndex),
+                CaptureMethod.BitBlt => new GdiScreenCapture(displayIndex),
                 _ => throw new Exception("This would never happened."),
             };
 
@@ -296,6 +313,9 @@ public partial class MainWindow : Window
             {
                 // libx264 and libx256 bitrate is measured in kilobits
                 _videoEncoder.BitRate /= 1000;
+
+                // 最小是 1000 kbps
+                _videoEncoder.BitRate = Math.Max(_videoEncoder.BitRate, 1000);
             }
 
             // network
@@ -332,18 +352,24 @@ public partial class MainWindow : Window
             BroadcastTask = null;
         }
 
-        _cancellationTokenSource?.Dispose();
-        _cancellationTokenSource = null;
-        _tcpListener?.Stop();
-        _tcpListener = null;
-        _videoEncoder?.Dispose();
-        _videoEncoder = null;
-        _screenCapture?.Dispose();
-        _screenCapture = null;
-        _cursorLoader?.Dispose();
-        _cursorLoader = null;
-        _skSurface?.Dispose();
-        _skSurface = null;
+        try
+        {
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+
+            _tcpListener?.Stop();
+            _tcpListener = null;
+            _screenCapture?.Dispose();
+            _screenCapture = null;
+            _cursorLoader?.Dispose();
+            _cursorLoader = null;
+            _skSurface?.Dispose();
+            _skSurface = null;
+
+            _videoEncoder?.Dispose();
+            _videoEncoder = null;
+        }
+        catch { }
 
         foreach (var client in _clients)
         {
@@ -510,7 +536,7 @@ public partial class MainWindow : Window
                         cursorInfo.cbSize = (uint)sizeof(CURSORINFO);
                     }
 
-                    if (showMouseCursor && 
+                    if (showMouseCursor &&
                         PInvoke.GetCursorInfo(ref cursorInfo) &&
                         cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
                     {

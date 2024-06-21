@@ -10,7 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LibCommon\LibCommon.csproj" />
     <ProjectReference Include="..\LibScreenCapture\LibScreenCapture.csproj" />
   </ItemGroup>
 

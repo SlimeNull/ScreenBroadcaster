@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace LibCommon
+namespace Sn.ScreenBroadcaster.Data
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct BroadcasterScreenInfo

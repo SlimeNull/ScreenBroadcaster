@@ -1,4 +1,4 @@
-﻿namespace Sn.ScreenBroadcaster;
+﻿namespace Sn.ScreenBroadcaster.Data;
 
 public enum ConfigMode
 {

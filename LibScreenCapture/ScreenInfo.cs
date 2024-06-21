@@ -1,10 +1,11 @@
-﻿using Windows.Win32;
+﻿using System.Text;
+using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 
 namespace LibScreenCapture
 {
-    public record struct ScreenInfo(int X, int Y, int Width, int Height, int DpiX, int DpiY)
+    public record struct ScreenInfo(bool IsPrimary, int X, int Y, int Width, int Height, int DpiX, int DpiY)
     {
         public static int GetScreenCount()
         {
@@ -25,11 +26,14 @@ namespace LibScreenCapture
             {
                 var rect = *rectPointer;
                 var monitorInfo = default(MONITORINFO);
+                monitorInfo.cbSize = (uint)sizeof(MONITORINFO);
 
-                PInvoke.GetMonitorInfo(monitor, ref monitorInfo);
+                PInvoke.GetMonitorInfo(monitor, &monitorInfo);
                 PInvoke.GetDpiForMonitor(monitor, Windows.Win32.UI.HiDpi.MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out var dpiX, out var dpiY);
 
-                result[screenIndex] = new ScreenInfo(rect.X, rect.Y, rect.Width, rect.Height, (int)dpiX, (int)dpiY);
+                bool monitorIsPrimary = (monitorInfo.dwFlags & PInvoke.MONITORINFOF_PRIMARY) != 0;
+
+                result[screenIndex] = new ScreenInfo(monitorIsPrimary, rect.X, rect.Y, rect.Width, rect.Height, (int)dpiX, (int)dpiY);
                 screenIndex++;
 
                 return true;
@@ -65,6 +69,14 @@ namespace LibScreenCapture
             }
 
             return bottom - top;
+        }
+
+        public override string ToString()
+        {
+            if (IsPrimary)
+                return $"{Width}x{Height} @ {X},{Y} (Primary)";
+            else
+                return $"{Width}x{Height} @ {X},{Y}";
         }
     }
 }

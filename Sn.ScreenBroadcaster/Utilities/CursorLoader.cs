@@ -5,17 +5,19 @@ using Windows.Win32.UI.WindowsAndMessaging;
 using Windows.Win32.Graphics.Gdi;
 using System.IO;
 
-namespace Sn.ScreenBroadcaster
+namespace Sn.ScreenBroadcaster.Utilities
 {
     public class CursorLoader : IDisposable
     {
+        public bool EnableCache { get; set; } = true;
+
         public static unsafe bool GetCursorMaskValue(int stride, byte* maskData, int x, int y)
         {
             var bitPosition = stride * y * 8 + x;
             var bytePosition = bitPosition / 8;
             var bitShift = bitPosition % 8;
 
-            return (maskData[bytePosition] & (1 << (7 - bitShift))) != 0;
+            return (maskData[bytePosition] & 1 << 7 - bitShift) != 0;
         }
 
         public record struct CursorData(int HotspotX, int HotspotY, int Width, int Height, SKBitmap? DirectBitmap, SKBitmap? InvertBitmap);
@@ -80,7 +82,7 @@ namespace Sn.ScreenBroadcaster
                 bitmapInfo.bmiHeader.biHeight = -bitmapInfo.bmiHeader.biHeight;
                 PInvoke.GetDIBits(hDC, hColorBitmap, 0, (uint)cursorHeight, (void*)colorBitmap.GetPixels(), &bitmapInfo, DIB_USAGE.DIB_RGB_COLORS);
 
-                bitmapInfo = default(BITMAPINFO);
+                bitmapInfo = default;
                 bitmapInfo.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
 
                 // mask
@@ -130,7 +132,7 @@ namespace Sn.ScreenBroadcaster
                 var maskBuffer = stackalloc byte[(int)bitmapInfo.bmiHeader.biSizeImage];
 
                 var andMaskPtr = maskBuffer;
-                var orMaskPtr = maskBuffer + (maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2);
+                var orMaskPtr = maskBuffer + maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2;
 
                 bitmapInfo.bmiHeader.biHeight = -bitmapInfo.bmiHeader.biHeight;
                 PInvoke.GetDIBits(hDC, hMaskBitmap, 0, (uint)colorBitmapInfo.bmHeight, maskBuffer, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
@@ -169,7 +171,7 @@ namespace Sn.ScreenBroadcaster
                 var maskBuffer = stackalloc byte[(int)bitmapInfo.bmiHeader.biSizeImage];
 
                 var andMaskPtr = maskBuffer;
-                var orMaskPtr = maskBuffer + (maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2);
+                var orMaskPtr = maskBuffer + maskBitmapInfo.bmWidth * maskBitmapInfo.bmHeight / 8 / 2;
 
                 bitmapInfo.bmiHeader.biHeight = -bitmapInfo.bmiHeader.biHeight;
                 PInvoke.GetDIBits(hDC, hMaskBitmap, 0, (uint)maskBitmapInfo.bmHeight, maskBuffer, &bitmapInfo, DIB_USAGE.DIB_PAL_COLORS);
@@ -222,7 +224,7 @@ namespace Sn.ScreenBroadcaster
             {
                 var hCursor = PInvoke.LoadCursor(HINSTANCE.Null, cursorName);
 
-                if (hCursor == IntPtr.Zero)
+                if (hCursor == (nint)(0))
                 {
                     continue;
                 }
@@ -236,18 +238,35 @@ namespace Sn.ScreenBroadcaster
 
         public unsafe CursorData? GetCursor(nint hCursor)
         {
-            if (_cache.TryGetValue(hCursor, out var cachedCursor))
+            if (EnableCache && 
+                _cache.TryGetValue(hCursor, out var cachedCursor))
             {
                 return cachedCursor;
             }
 
             if (LoadCursor(hCursor) is { } loadedCursor)
             {
-                _cache[hCursor] = loadedCursor;
+                if (EnableCache)
+                {
+                    _cache[hCursor] = loadedCursor;
+                }
+
                 return loadedCursor;
             }
 
             return null;
+        }
+
+        public unsafe CursorData? GetCurrentCursor()
+        {
+            CURSORINFO cursorInfo = default;
+            cursorInfo.cbSize = (uint)sizeof(CURSORINFO);
+
+            var ok = PInvoke.GetCursorInfo(ref cursorInfo);
+            if (!ok)
+                return null;
+
+            return GetCursor(cursorInfo.hCursor);
         }
 
         public void Dispose()

@@ -1,4 +1,4 @@
-﻿<Window x:Class="Sn.ScreenBroadcaster.ClientWindow"
+﻿<Window x:Class="Sn.ScreenBroadcaster.Views.ClientWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,7 +8,7 @@
         Closing="Window_Closing"
         Title="Sn.ScreenBroadcaster Client" Height="450" Width="800"
         WindowStartupLocation="CenterOwner"
-        Icon="Icon64.png"
+        Icon="/Assets/Icon64.png"
         d:DataContext="{d:DesignInstance Type=local:ClientWindow}">
     <Grid>
         <Image Name="frameImage" 

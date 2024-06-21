@@ -19,14 +19,15 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LibCommon;
 using Sdcb.FFmpeg.Codecs;
 using Sdcb.FFmpeg.Common;
 using Sdcb.FFmpeg.Raw;
 using Sdcb.FFmpeg.Swscales;
 using Sdcb.FFmpeg.Utils;
+using Sn.ScreenBroadcaster.Data;
+using Sn.ScreenBroadcaster.Utilities;
 
-namespace Sn.ScreenBroadcaster
+namespace Sn.ScreenBroadcaster.Views
 {
     /// <summary>
     /// Interaction logic for ClientWindow.xaml

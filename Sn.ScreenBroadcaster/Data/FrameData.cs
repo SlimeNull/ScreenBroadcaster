@@ -1,9 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Sdcb.FFmpeg.Codecs;
+using Sn.ScreenBroadcaster.Utilities;
 
-namespace LibCommon
+namespace Sn.ScreenBroadcaster.Data
 {
     public record struct FrameData(long Timestamp, bool IsKeyFrame, List<byte[]> Packets)
     {

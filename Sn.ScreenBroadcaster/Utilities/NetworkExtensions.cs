@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
-namespace LibCommon
+namespace Sn.ScreenBroadcaster.Utilities
 {
     public static class NetworkExtensions
     {

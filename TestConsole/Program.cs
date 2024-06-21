@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using LibScreenCapture;
 using SkiaSharp;
+using Sn.ScreenBroadcaster.Utilities;
 using Spectre.Console;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -13,14 +14,17 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 unsafe
 {
-    CursorLoader cursor = new();
-    cursor.Initialize();
+    CursorLoader cursorLoader = new();
+    cursorLoader.EnableCache = false;
 
     while (true)
     {
-        var bitmap = cursor.GetCursor();
+        var cursor = cursorLoader.GetCurrentCursor();
+        if (cursor?.DirectBitmap is null)
+            continue;
 
-        var image = new CanvasImage(bitmap.Encode(SKEncodedImageFormat.Png, 100).AsStream());
+        var image = new CanvasImage(cursor.Value.DirectBitmap.Encode(SKEncodedImageFormat.Png, 100).AsStream());
+
         Console.SetCursorPosition(0, 0);
         AnsiConsole.Write(image);
     }

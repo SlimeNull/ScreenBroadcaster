@@ -16,4 +16,7 @@ GetSystemMetrics
 EnumDisplayMonitors
 GetDpiForMonitor
 GetMonitorInfo
+MONITORINFOEXW
+
+MONITORINFOF_PRIMARY
 BI_*

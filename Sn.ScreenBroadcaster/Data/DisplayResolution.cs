@@ -1,4 +1,4 @@
-﻿namespace Sn.ScreenBroadcaster;
+﻿namespace Sn.ScreenBroadcaster.Data;
 
 public record struct DisplayResolution(int Width, int Height)
 {

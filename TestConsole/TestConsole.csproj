@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LibScreenCapture\LibScreenCapture.csproj" />
+    <ProjectReference Include="..\Sn.ScreenBroadcaster\Sn.ScreenBroadcaster.csproj" />
   </ItemGroup>
 
 </Project>
