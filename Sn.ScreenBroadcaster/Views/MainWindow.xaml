@@ -34,7 +34,9 @@
                         BorderThickness="0"
                         Visibility="{Binding BroadcastTask,Converter={StaticResource ValueIsNotNullToVisibilityConverter}}"/>
 
-        <ws:ScrollViewer FocusVisualStyle="{x:Null}">
+        <ws:ScrollViewer FocusVisualStyle="{x:Null}"
+                         PanningMode="Both"
+                         ws:StylusTouchDevice.Simulate="True">
             <ws:StackPanel Spacing="8"
                            Margin="24">
                 <ws:StackPanel Margin="0 48"

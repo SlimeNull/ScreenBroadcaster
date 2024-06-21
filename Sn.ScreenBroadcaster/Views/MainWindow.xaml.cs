@@ -35,17 +35,10 @@ public partial class MainWindow : Window
 {
     public MainWindow()
     {
-        var desktopWindow = PInvoke.GetDesktopWindow();
-        var desktopDC = PInvoke.GetDC(desktopWindow);
-        _frameWidth = PInvoke.GetDeviceCaps(desktopDC, Windows.Win32.Graphics.Gdi.GET_DEVICE_CAPS_INDEX.DESKTOPHORZRES);
-        _frameHeight = PInvoke.GetDeviceCaps(desktopDC, Windows.Win32.Graphics.Gdi.GET_DEVICE_CAPS_INDEX.DESKTOPVERTRES);
-
-        PInvoke.ReleaseDC(desktopWindow, desktopDC);
-
         DataContext = this;
         InitializeComponent();
-        LoadScreens();
 
+        LoadScreens();
         Screen = AvailableScreens.FirstOrDefault();
     }
 
