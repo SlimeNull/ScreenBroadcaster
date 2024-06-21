@@ -124,7 +124,7 @@ public partial class MainWindow : Window
     {
         AVCodecID.H264,
         AVCodecID.Hevc,     // HEVC 会有延迟
-        //AVCodecID.Av1,    // AV1 有毛病, 不能用
+        AVCodecID.Av1,    // AV1 有毛病, 不能用
     };
 
     public ObservableCollection<DisplayResolution> AvailableFrameSizes { get; } = new()
@@ -305,7 +305,8 @@ public partial class MainWindow : Window
             // correct the bitrate
             var codecName = _videoEncoder.Codec.Name;
             if (codecName == "libx264" ||
-                codecName == "libx265")
+                codecName == "libx265" ||
+                codecName == "libsvtav1")
             {
                 // libx264 and libx256 bitrate is measured in kilobits
                 _videoEncoder.BitRate /= 1000;
@@ -503,10 +504,10 @@ public partial class MainWindow : Window
                 mediaDictionary["tune"] = "zerolatency";
                 mediaDictionary["preset"] = "veryfast";
             }
-            else if (codecName == "libaom-av1")
+            else if (codecName == "libsvtav1")
             {
                 //mediaDictionary["tune"] = "zerolatency";
-                mediaDictionary["preset"] = "9";
+                mediaDictionary["preset"] = "12";
             }
             else if (codecName == "h264_nvenc")
             {
