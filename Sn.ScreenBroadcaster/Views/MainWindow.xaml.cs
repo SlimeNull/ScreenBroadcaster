@@ -288,31 +288,34 @@ public partial class MainWindow : Window
             // init SKSurface
             _skSurface = SKSurface.Create(new SKImageInfo(_screenCapture.ScreenWidth, _screenCapture.ScreenHeight, SKColorType.Bgra8888, SKAlphaType.Opaque), _screenCapture.DataPointer, _screenCapture.Stride);
 
+            var codec = FFmpegUtilities.FindBestEncoder(CodecId, UseHardwareCodec);
+
+            // correct the bitrate
+            var bitRate = BitRate;
+            var codecName = codec.Name;
+            if (codecName == "libx264" ||
+                codecName == "libx265" ||
+                codecName == "libsvtav1")
+            {
+                // libx264 and libx256 bitrate is measured in kilobits
+                bitRate /= 1000;
+
+                // 最小是 1000 kbps
+                bitRate = Math.Max(bitRate, 1000);
+            }
+
             // init encoding
-            _videoEncoder = new CodecContext(FFmpegUtilities.FindBestEncoder(CodecId, UseHardwareCodec))
+            _videoEncoder = new CodecContext(codec)
             {
                 Width = FrameWidth,
                 Height = FrameHeight,
                 Framerate = new AVRational(1, MaxFrameRate),
                 TimeBase = new AVRational(1, MaxFrameRate),
                 PixelFormat = PixelFormat,
-                BitRate = BitRate,
+                BitRate = bitRate,
                 MaxBFrames = 0,
                 GopSize = 10,
             };
-
-            // correct the bitrate
-            var codecName = _videoEncoder.Codec.Name;
-            if (codecName == "libx264" ||
-                codecName == "libx265" ||
-                codecName == "libsvtav1")
-            {
-                // libx264 and libx256 bitrate is measured in kilobits
-                _videoEncoder.BitRate /= 1000;
-
-                // 最小是 1000 kbps
-                _videoEncoder.BitRate = Math.Max(_videoEncoder.BitRate, 1000);
-            }
 
             // network
             _tcpListener = new TcpListener(new IPEndPoint(ipAddress, Port));
@@ -472,7 +475,6 @@ public partial class MainWindow : Window
 
             var pts = 0;
             var cancellationToken = _cancellationTokenSource.Token;
-            var mediaDictionary = new MediaDictionary();
             var lastFrameTime = DateTimeOffset.MinValue;
             var maxFrameRate = MaxFrameRate;
             var showMouseCursor = ShowMouseCursor;
@@ -486,29 +488,46 @@ public partial class MainWindow : Window
                 maxFrameRate = 60;
 
             var codecName = _videoEncoder.Codec.Name;
-            if (codecName == "libx264" ||
-                codecName == "libx265")
+
+            using (var mediaDictionary = new MediaDictionary())
             {
-                //mediaDictionary["crf"] = "30";
-                mediaDictionary["tune"] = "zerolatency";
-                mediaDictionary["preset"] = "veryfast";
-            }
-            else if (codecName == "libsvtav1")
-            {
-                //mediaDictionary["tune"] = "zerolatency";
-                mediaDictionary["preset"] = "12";
-            }
-            else if (codecName == "h264_nvenc")
-            {
-                mediaDictionary["preset"] = "fast";
-                mediaDictionary["tune"] = "ull";
+                if (codecName == "libx264" ||
+                    codecName == "libx265")
+                {
+                    //mediaDictionary["crf"] = "30";
+                    mediaDictionary["tune"] = "zerolatency";
+                    mediaDictionary["preset"] = "veryfast";
+                }
+                else if (codecName == "libsvtav1")
+                {
+                    //mediaDictionary["tune"] = "zerolatency";
+                    mediaDictionary["preset"] = "9";
+                }
+                else if (codecName == "h264_nvenc")
+                {
+                    mediaDictionary["preset"] = "fast";
+                    mediaDictionary["tune"] = "ull";
+                }
+
+                try
+                {
+                    _videoEncoder.Open(null, mediaDictionary);
+                }
+                catch (Exception ex)
+                {
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        MessageBox.Show(this, $"Failed to open encoder. {ex.Message}", "Encoder Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                        _ = Stop();
+                    });
+
+                    return;
+                }
             }
 
 
             try
             {
-                _videoEncoder.Open(null, mediaDictionary);
-
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     while ((DateTimeOffset.Now - lastFrameTime) < TimeSpan.FromSeconds(1.0 / maxFrameRate))
@@ -637,7 +656,7 @@ public partial class MainWindow : Window
             {
                 Dispatcher.BeginInvoke(() =>
                 {
-                    MessageBox.Show(this, ex.Message, "Decoder Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(this, ex.Message, "Encoder Issue", MessageBoxButton.OK, MessageBoxImage.Error);
                     _ = Stop();
                 });
             }
