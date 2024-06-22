@@ -124,7 +124,7 @@ public partial class MainWindow : Window
     {
         AVCodecID.H264,
         AVCodecID.Hevc,     // HEVC 会有延迟
-        //AVCodecID.Av1,    // AV1 有毛病, 不能用
+        AVCodecID.Av1,    // AV1 有毛病, 不能用
     };
 
     public ObservableCollection<DisplayResolution> AvailableFrameSizes { get; } = new()
@@ -156,7 +156,6 @@ public partial class MainWindow : Window
     private CursorLoader? _cursorLoader;
     private CodecContext? _videoEncoder;
     private SKSurface? _skSurface;
-    private FrameData? _lastKeyFrame = null;
     private TcpListener? _tcpListener;
     private readonly List<TcpClientInfo> _clients = new();
 
@@ -305,7 +304,8 @@ public partial class MainWindow : Window
             // correct the bitrate
             var codecName = _videoEncoder.Codec.Name;
             if (codecName == "libx264" ||
-                codecName == "libx265")
+                codecName == "libx265" ||
+                codecName == "libsvtav1")
             {
                 // libx264 and libx256 bitrate is measured in kilobits
                 _videoEncoder.BitRate /= 1000;
@@ -432,16 +432,6 @@ public partial class MainWindow : Window
                         newClientStream.WriteStruct(screenInfo);
                     }
 
-                    while (_lastKeyFrame is null)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            return;
-
-                        Thread.Sleep(1);
-                    }
-
-                    _lastKeyFrame.Value.WriteToStream(newClientStream);
-
                     lock (_clients)
                     {
                         _clients.Add(new TcpClientInfo(newClient, new()));
@@ -503,10 +493,10 @@ public partial class MainWindow : Window
                 mediaDictionary["tune"] = "zerolatency";
                 mediaDictionary["preset"] = "veryfast";
             }
-            else if (codecName == "libaom-av1")
+            else if (codecName == "libsvtav1")
             {
                 //mediaDictionary["tune"] = "zerolatency";
-                mediaDictionary["preset"] = "9";
+                mediaDictionary["preset"] = "12";
             }
             else if (codecName == "h264_nvenc")
             {
@@ -595,6 +585,7 @@ public partial class MainWindow : Window
                         return;
                     }
 
+                    bool isFirstFrame = true;
                     foreach (var packet in _videoEncoder.EncodeFrame(_yuvFrame, _packetRef))
                     {
                         byte[] packetBytes = new byte[packet.Data.Length];
@@ -613,15 +604,12 @@ public partial class MainWindow : Window
 
                         framePacketBytes.Add(packetBytes);
 
-                        if ((packet.Flags & ffmpeg.AV_PKT_FLAG_KEY) != 0)
+                        if (isFirstFrame && (packet.Flags & ffmpeg.AV_PKT_FLAG_KEY) != 0)
                         {
                             isKeyFrame = true;
                         }
-                    }
 
-                    if (isKeyFrame)
-                    {
-                        _lastKeyFrame = new FrameData(timestamp, true, framePacketBytes);
+                        isFirstFrame = false;
                     }
 
                     if (framePacketBytes.Count != 0)
