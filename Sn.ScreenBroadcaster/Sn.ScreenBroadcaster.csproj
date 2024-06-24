@@ -32,21 +32,38 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Win64FFmpegDllFiles Include="Assets\FFmpeg\win-x64\**\*.*" />
+    <Win32FFmpegDllFiles Include="Assets\FFmpeg\win-x86\**\*.*" />
+  </ItemGroup>
+
+  <Target Name="CopyFFmpegDLLs" AfterTargets="AfterBuild" Condition="'$(TargetFramework)'=='net8.0-windows'">
+    <Copy SourceFiles="@(Win64FFmpegDllFiles)" DestinationFolder="$(OutDir)runtimes\win-x64\native\" />
+    <Copy SourceFiles="@(Win32FFmpegDllFiles)" DestinationFolder="$(OutDir)runtimes\win-x86\native\" />
+  </Target>
+
+  <Target Name="CopyFFmpegDLLs" AfterTargets="AfterBuild" Condition="'$(TargetFramework)'=='net481'">
+    <Copy SourceFiles="@(Win64FFmpegDllFiles)" DestinationFolder="$(OutDir)dll\x64\" />
+    <Copy SourceFiles="@(Win32FFmpegDllFiles)" DestinationFolder="$(OutDir)dll\x86\" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.106">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="EleCho.WpfSuite" Version="0.4.1" />
-    <PackageReference Include="Sdcb.FFmpeg" Version="7.0.0" />
-    <PackageReference Include="Sdcb.FFmpeg.runtime.windows-x64" Version="7.0.0" />
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
     <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LibScreenCapture\LibScreenCapture.csproj" />
+    <ProjectReference Include="..\Sdcb.FFmpeg\Sdcb.FFmpeg.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -623,7 +623,7 @@ public partial class MainWindow : Window
 
                         framePacketBytes.Add(packetBytes);
 
-                        if (isFirstFrame && (packet.Flags & ffmpeg.AV_PKT_FLAG_KEY) != 0)
+                        if (isFirstFrame && (packet.Flags & FFmpeg.AV_PKT_FLAG_KEY) != 0)
                         {
                             isKeyFrame = true;
                         }

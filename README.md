@@ -39,3 +39,10 @@ App:
 Broadcasting
 
 ![Broadcasting](Assets/broadcasting.png)
+
+<br>
+
+## Thanks
+
+- [ShiftMediaProject/FFmpeg](https://github.com/ShiftMediaProject/FFmpeg/)
+- [Sdcb/Sdcb.FFpeg](https://github.com/sdcb/Sdcb.FFmpeg)

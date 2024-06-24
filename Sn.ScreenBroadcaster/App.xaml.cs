@@ -11,6 +11,27 @@ namespace Sn.ScreenBroadcaster;
 /// </summary>
 public partial class App : Application
 {
+    static App()
+    {
+        // custom dll loading logic for .NET Framework
+#if !NETCOREAPP
+        bool isWin64 = IntPtr.Size == 8;
+        var path = Environment.GetEnvironmentVariable("PATH");
+        var absFolderPath = AppContext.BaseDirectory;
+
+        if (isWin64)
+        {
+            var dllFolderPath = System.IO.Path.Combine(absFolderPath, @"dll\x64");
+            Environment.SetEnvironmentVariable("PATH", $"{dllFolderPath};{path}");
+        }
+        else
+        {
+            var dllFolderPath = System.IO.Path.Combine(absFolderPath, @"dll\x86");
+            Environment.SetEnvironmentVariable("PATH", $"{dllFolderPath};{path}");
+        }
+#endif
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         if (e.Args.Any(str => str.Equals("--console", StringComparison.OrdinalIgnoreCase)))
@@ -21,7 +42,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         if (Resources is null)
-        { 
+        {
             Resources = new ResourceDictionary();
         }
 

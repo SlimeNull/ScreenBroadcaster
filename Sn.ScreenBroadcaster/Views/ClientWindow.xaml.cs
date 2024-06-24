@@ -254,7 +254,7 @@ namespace Sn.ScreenBroadcaster.Views
                                     fixed (byte* bodyPtr = packetBytes)
                                     {
                                         AVPacket avPacket = default;
-                                        ffmpeg.av_packet_from_data(&avPacket, bodyPtr, packetBytes.Length);
+                                        FFmpeg.av_packet_from_data(&avPacket, bodyPtr, packetBytes.Length);
 
                                         using Packet packet = Packet.FromNative(&avPacket, false);
 

@@ -1,0 +1,101 @@
+using System;
+using System.Runtime.InteropServices;
+
+#pragma warning disable 169
+#pragma warning disable CS0649
+#pragma warning disable CS0108
+namespace Sdcb.FFmpeg.Raw
+{
+    /// <summary>Context for an Audio FIFO Buffer.</summary>
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVAudioFifo
+    {
+    }
+    
+    /// <summary>@}</summary>
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVBPrint
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVDictionary
+    {
+    }
+    
+    /// <summary>A reference counted buffer type. It is opaque and is meant to be used through references (AVBufferRef).</summary>
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVBuffer
+    {
+    }
+    
+    /// <summary>The buffer pool. This structure is opaque and not meant to be accessed directly. It is allocated with av_buffer_pool_init() and freed with av_buffer_pool_uninit().</summary>
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVBufferPool
+    {
+    }
+    
+    /// <summary>Low-complexity tree container</summary>
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVTreeNode
+    {
+    }
+    
+    /// <summary>The libswresample context. Unlike libavcodec and libavformat, this structure is opaque. This means that if you would like to set options, you must use the avoptions API and cannot directly set values to members of the structure.</summary>
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct SwrContext
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct SwsContext
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVCodecInternal
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVIAMFAudioElement
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVIAMFMixPresentation
+    {
+    }
+    
+    /// <summary>**********************************************</summary>
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVCodecTag
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVIODirContext
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVFilterPad
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVFilterFormats
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVFilterChannelLayouts
+    {
+    }
+    
+    /// <remarks>This struct is incomplete.</remarks>
+    public unsafe struct AVFilterCommand
+    {
+    }
+    
+}
