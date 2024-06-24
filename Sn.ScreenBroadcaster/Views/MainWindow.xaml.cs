@@ -124,7 +124,7 @@ public partial class MainWindow : Window
     {
         AVCodecID.H264,
         AVCodecID.Hevc,     // HEVC 会有延迟
-        AVCodecID.Av1,    // AV1 有毛病, 不能用
+        //AVCodecID.Av1,    // AV1 有毛病, 不能用, 什么 Divide by zero exception. 搞不明白
     };
 
     public ObservableCollection<DisplayResolution> AvailableFrameSizes { get; } = new()

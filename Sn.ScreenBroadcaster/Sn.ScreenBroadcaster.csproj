@@ -9,12 +9,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>12</LangVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    
+
     <Authors>SlimeNull</Authors>
     <Version>1.1.0</Version>
     <Copyright>(C) SlimeNull</Copyright>
     <ApplicationIcon>Assets/Icon.ico</ApplicationIcon>
-    
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,18 +32,37 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Win64FFmpegDllFiles Include="Assets\FFmpeg\win-x64\**\*.*" />
-    <Win32FFmpegDllFiles Include="Assets\FFmpeg\win-x86\**\*.*" />
+    <Win64AvCodecDllFile Include="Assets\FFmpeg\win-x64\avcodec.dll" />
+    <Win64SwResampleDllFile Include="Assets\FFmpeg\win-x64\swresample.dll" />
+    <Win64SwScaleDllFile Include="Assets\FFmpeg\win-x64\swscale.dll" />
+    <Win64AvUtilDllFile Include="Assets\FFmpeg\win-x64\avutil.dll" />
+
+    <Win32AvCodecDllFile Include="Assets\FFmpeg\win-x86\avcodec.dll" />
+    <Win32SwResampleDllFile Include="Assets\FFmpeg\win-x86\swresample.dll" />
+    <Win32SwScaleDllFile Include="Assets\FFmpeg\win-x86\swscale.dll" />
+    <Win32AvUtilDllFile Include="Assets\FFmpeg\win-x86\avutil.dll" />
   </ItemGroup>
 
-  <Target Name="CopyFFmpegDLLs" AfterTargets="AfterBuild" Condition="'$(TargetFramework)'=='net8.0-windows'">
-    <Copy SourceFiles="@(Win64FFmpegDllFiles)" DestinationFolder="$(OutDir)runtimes\win-x64\native\" />
-    <Copy SourceFiles="@(Win32FFmpegDllFiles)" DestinationFolder="$(OutDir)runtimes\win-x86\native\" />
+  <Target Name="NET8_CopyFFmpegDLLs" AfterTargets="AfterBuild" Condition="'$(TargetFramework)'=='net8.0-windows'">
+    <Copy SourceFiles="@(Win64AvCodecDllFile)" DestinationFolder="$(OutDir)runtimes\win-x64\native\" />
+    <Copy SourceFiles="@(Win64SwResampleDllFile)" DestinationFolder="$(OutDir)runtimes\win-x64\native\" />
+    <Copy SourceFiles="@(Win64SwScaleDllFile)" DestinationFolder="$(OutDir)runtimes\win-x64\native\" />
+    <Copy SourceFiles="@(Win64AvUtilDllFile)" DestinationFolder="$(OutDir)runtimes\win-x64\native\" />
+    <Copy SourceFiles="@(Win32AvCodecDllFile)" DestinationFolder="$(OutDir)runtimes\win-x86\native\" />
+    <Copy SourceFiles="@(Win32SwResampleDllFile)" DestinationFolder="$(OutDir)runtimes\win-x86\native\" />
+    <Copy SourceFiles="@(Win32SwScaleDllFile)" DestinationFolder="$(OutDir)runtimes\win-x86\native\" />
+    <Copy SourceFiles="@(Win32AvUtilDllFile)" DestinationFolder="$(OutDir)runtimes\win-x86\native\" />
   </Target>
 
-  <Target Name="CopyFFmpegDLLs" AfterTargets="AfterBuild" Condition="'$(TargetFramework)'=='net481'">
-    <Copy SourceFiles="@(Win64FFmpegDllFiles)" DestinationFolder="$(OutDir)dll\x64\" />
-    <Copy SourceFiles="@(Win32FFmpegDllFiles)" DestinationFolder="$(OutDir)dll\x86\" />
+  <Target Name="NETFW_CopyFFmpegDLLs" AfterTargets="AfterBuild" Condition="'$(TargetFramework)'=='net481'">
+    <Copy SourceFiles="@(Win64AvCodecDllFile)" DestinationFolder="$(OutDir)dll\x64" />
+    <Copy SourceFiles="@(Win64SwResampleDllFile)" DestinationFolder="$(OutDir)dll\x64" />
+    <Copy SourceFiles="@(Win64SwScaleDllFile)" DestinationFolder="$(OutDir)dll\x64" />
+    <Copy SourceFiles="@(Win64AvUtilDllFile)" DestinationFolder="$(OutDir)dll\x64" />
+    <Copy SourceFiles="@(Win32AvCodecDllFile)" DestinationFolder="$(OutDir)dll\x86" />
+    <Copy SourceFiles="@(Win32SwResampleDllFile)" DestinationFolder="$(OutDir)dll\x86" />
+    <Copy SourceFiles="@(Win32SwScaleDllFile)" DestinationFolder="$(OutDir)dll\x86" />
+    <Copy SourceFiles="@(Win32AvUtilDllFile)" DestinationFolder="$(OutDir)dll\x86" />
   </Target>
 
   <ItemGroup>
