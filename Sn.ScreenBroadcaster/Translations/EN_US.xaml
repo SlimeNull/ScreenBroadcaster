@@ -5,6 +5,10 @@
     <s:String x:Key="String.Connect">Connect</s:String>
     <s:String x:Key="String.Broadcast">Broadcast</s:String>
     <s:String x:Key="String.Stop">Stop</s:String>
+    <s:String x:Key="String.Status">Status</s:String>
+    <s:String x:Key="String.ClientCount">Client Count</s:String>
+    <s:String x:Key="String.FrameRate">FrameRate</s:String>
+    <s:String x:Key="String.Clients">Clients</s:String>
     <s:String x:Key="String.General">General</s:String>
     <s:String x:Key="String.Address">Address</s:String>
     <s:String x:Key="String.Port">Port</s:String>

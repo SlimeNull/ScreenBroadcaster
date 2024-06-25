@@ -17,6 +17,10 @@
 
     <Window.Resources>
         <ws:ValueIsNullConverter x:Key="ValueIsNullConverter"/>
+        <ws:ValueConverterGroup x:Key="NumberIsNotZeroToVisibilityConverter">
+            <ws:NumberCompareConverter Comparison="NotEqual" TargetValue="0"/>
+            <ws:BooleanToVisibilityConverter/>
+        </ws:ValueConverterGroup>
         <ws:ValueConverterGroup x:Key="ValueIsNullToVisibilityConverter">
             <ws:ValueIsNullConverter/>
             <ws:BooleanToVisibilityConverter/>
@@ -66,6 +70,45 @@
                     </ws:StackPanel>
                 </ws:StackPanel>
 
+                <ws:GroupBox Header="{DynamicResource String.Status}"
+                             Padding="8"
+                             Visibility="{Binding BroadcastTask,Converter={StaticResource ValueIsNotNullToVisibilityConverter}}">
+                    <ws:StackPanel Spacing="4">
+                        <ws:StackPanel Orientation="Horizontal"
+                                       Spacing="4">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{DynamicResource String.ClientCount}"/>
+                                <TextBlock Text=":"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding ConnectedClients.Length,FallbackValue=0}"/>
+                        </ws:StackPanel>
+                        <ws:StackPanel Orientation="Horizontal"
+                                       Spacing="4">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{DynamicResource String.FrameRate}"/>
+                                <TextBlock Text=":"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding FrameRate,FallbackValue=0}"/>
+                        </ws:StackPanel>
+                    </ws:StackPanel>
+                </ws:GroupBox>
+                <ws:GroupBox Header="{DynamicResource String.Clients}"
+                             Padding="8"
+                             Visibility="{Binding ConnectedClients.Length,Converter={StaticResource NumberIsNotZeroToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{Binding ConnectedClients}"
+                                  d:ItemsSource="{d:SampleData ItemCount=3}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ws:StackPanel Orientation="Horizontal"
+                                               Spacing="4">
+                                    <TextBlock Text="{Binding RemoteEndPoint.Address}"/>
+                                    <TextBlock Text=":"/>
+                                    <TextBlock Text="{Binding RemoteEndPoint.Port}"/>
+                                </ws:StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ws:GroupBox>
                 <ws:GroupBox Header="{DynamicResource String.General}"
                              Padding="8"
                              IsEnabled="{Binding BroadcastTask,Converter={StaticResource ValueIsNullConverter}}">

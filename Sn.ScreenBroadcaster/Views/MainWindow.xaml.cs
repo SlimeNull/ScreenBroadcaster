@@ -42,6 +42,21 @@ public partial class MainWindow : Window
         Screen = AvailableScreens.FirstOrDefault();
     }
 
+    // atom status
+
+    private int _capturedFrameCount;
+
+
+
+
+    // observable properties
+
+    [ObservableProperty]
+    private Socket[] _connectedClients = Array.Empty<Socket>();
+
+    [ObservableProperty]
+    private int _frameRate;
+
     [ObservableProperty]
     private string _address = "0.0.0.0";
 
@@ -325,7 +340,8 @@ public partial class MainWindow : Window
             BroadcastTask = Task.WhenAll(
                 NetworkLoop(),
                 CaptureLoop(),
-                BroadcastLoop()
+                BroadcastLoop(),
+                StatusLoop()
             );
         }
         catch (Exception ex)
@@ -381,10 +397,11 @@ public partial class MainWindow : Window
         }
 
         _clients.Clear();
+        ConnectedClients = Array.Empty<Socket>();
     }
 
 
-    public Task NetworkLoop()
+    private Task NetworkLoop()
     {
         return Task.Run(async () =>
         {
@@ -439,6 +456,13 @@ public partial class MainWindow : Window
                     {
                         _clients.Add(new TcpClientInfo(newClient, new()));
                     }
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        ConnectedClients = _clients
+                            .Select(client => client.TcpClient.Client)
+                            .ToArray();
+                    });
                 }
             }
             catch (OperationCanceledException)
@@ -460,7 +484,7 @@ public partial class MainWindow : Window
         });
     }
 
-    public Task CaptureLoop()
+    private Task CaptureLoop()
     {
         return Task.Run(() =>
         {
@@ -558,6 +582,7 @@ public partial class MainWindow : Window
                     }
 
                     _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
+                    Interlocked.Add(ref _capturedFrameCount, 1);
 
                     if (cursor is not null)
                     {
@@ -663,7 +688,7 @@ public partial class MainWindow : Window
         });
     }
 
-    public Task BroadcastLoop()
+    private Task BroadcastLoop()
     {
         return Task.Run(() =>
         {
@@ -704,9 +729,39 @@ public partial class MainWindow : Window
                     {
                         _clients.Remove(client);
                     }
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        ConnectedClients = _clients
+                            .Select(client => client.TcpClient.Client)
+                            .ToArray();
+                    });
                 }
             }
         });
+    }
+
+    private async Task StatusLoop()
+    {
+        if (_cancellationTokenSource is null)
+            return;
+
+        var cancellationToken = _cancellationTokenSource.Token;
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000, cancellationToken);
+
+                FrameRate = _capturedFrameCount;
+                Interlocked.Exchange(ref _capturedFrameCount, 0);
+            }
+        }
+        catch(OperationCanceledException)
+        {
+            // pass
+        }
     }
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

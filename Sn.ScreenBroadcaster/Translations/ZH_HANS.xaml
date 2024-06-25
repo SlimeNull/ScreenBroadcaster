@@ -5,6 +5,9 @@
     <s:String x:Key="String.Connect">连接</s:String>
     <s:String x:Key="String.Broadcast">广播</s:String>
     <s:String x:Key="String.Stop">停止</s:String>
+    <s:String x:Key="String.Status">状态</s:String>
+    <s:String x:Key="String.ClientCount">客户端数量</s:String>
+    <s:String x:Key="String.FrameRate">帧率</s:String>
     <s:String x:Key="String.General">常规</s:String>
     <s:String x:Key="String.Address">地址</s:String>
     <s:String x:Key="String.Port">端口</s:String>
