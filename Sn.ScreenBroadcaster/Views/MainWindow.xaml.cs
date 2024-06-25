@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -340,7 +341,6 @@ public partial class MainWindow : Window
             BroadcastTask = Task.WhenAll(
                 NetworkLoop(),
                 CaptureLoop(),
-                BroadcastLoop(),
                 StatusLoop()
             );
         }
@@ -454,7 +454,10 @@ public partial class MainWindow : Window
 
                     lock (_clients)
                     {
-                        _clients.Add(new TcpClientInfo(newClient, new()));
+                        var newClientInfo = new TcpClientInfo(newClient, new());
+
+                        _clients.Add(newClientInfo);
+                        _ = BroadcastLoop(newClientInfo);
                     }
 
                     Dispatcher.Invoke(() =>
@@ -689,7 +692,7 @@ public partial class MainWindow : Window
         });
     }
 
-    private Task BroadcastLoop()
+    private Task BroadcastLoop(TcpClientInfo clientInfo)
     {
         return Task.Run(() =>
         {
@@ -701,40 +704,26 @@ public partial class MainWindow : Window
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                lock (_clients)
+                while (clientInfo.Frames.Count > CountForDroppingFrame &&
+                      (ThrowsKeyFrame || clientInfo.Frames.Count(v => v.IsKeyFrame) > 2))
                 {
-                    clientsToRemove.Clear();
-                    foreach (var client in _clients)
+                    clientInfo.Frames.TryDequeue(out _);
+                }
+
+                if (clientInfo.Frames.TryDequeue(out var frameData))
+                {
+                    try
                     {
-                        while (client.Frames.Count > CountForDroppingFrame &&
-                              (ThrowsKeyFrame || client.Frames.Count(v => v.IsKeyFrame) > 2))
+                        var stream = clientInfo.TcpClient.GetStream();
+                        frameData.WriteToStream(stream);
+                    }
+                    catch
+                    {
+                        lock(_clients)
                         {
-                            client.Frames.TryDequeue(out _);
+                            _clients.Remove(clientInfo);
                         }
 
-                        if (client.Frames.TryDequeue(out var frameData))
-                        {
-                            try
-                            {
-                                var stream = client.TcpClient.GetStream();
-                                frameData.WriteToStream(stream);
-                            }
-                            catch
-                            {
-                                clientsToRemove.Add(client);
-                            }
-                        }
-                    }
-
-                    bool clientsHasChange = clientsToRemove.Count != 0;
-
-                    foreach (var client in clientsToRemove)
-                    {
-                        _clients.Remove(client);
-                    }
-
-                    if (clientsHasChange)
-                    {
                         Dispatcher.Invoke(() =>
                         {
                             ConnectedClients = _clients
