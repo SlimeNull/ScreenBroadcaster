@@ -554,10 +554,14 @@ public partial class MainWindow : Window
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    while ((DateTimeOffset.Now - lastFrameTime) < TimeSpan.FromSeconds(1.0 / maxFrameRate))
+                    while (maxFrameRate != 0 && (DateTimeOffset.Now - lastFrameTime) < TimeSpan.FromSeconds(1.0 / maxFrameRate))
                     {
                         // wait
                     }
+
+                    var nowTime = DateTimeOffset.Now;
+                    var timestamp = nowTime.ToUnixTimeMilliseconds();
+                    lastFrameTime = nowTime;
 
                     CURSORINFO cursorInfo = default;
                     unsafe
@@ -600,9 +604,6 @@ public partial class MainWindow : Window
                         }
                     }
 
-                    var nowTime = DateTimeOffset.Now;
-                    var timestamp = nowTime.ToUnixTimeMilliseconds();
-                    lastFrameTime = nowTime;
 
                     _bgraFrame.Width = _screenCapture.ScreenWidth;
                     _bgraFrame.Height = _screenCapture.ScreenHeight;
@@ -725,17 +726,22 @@ public partial class MainWindow : Window
                         }
                     }
 
+                    bool clientsHasChange = clientsToRemove.Count != 0;
+
                     foreach (var client in clientsToRemove)
                     {
                         _clients.Remove(client);
                     }
 
-                    Dispatcher.Invoke(() =>
+                    if (clientsHasChange)
                     {
-                        ConnectedClients = _clients
-                            .Select(client => client.TcpClient.Client)
-                            .ToArray();
-                    });
+                        Dispatcher.Invoke(() =>
+                        {
+                            ConnectedClients = _clients
+                                .Select(client => client.TcpClient.Client)
+                                .ToArray();
+                        });
+                    }
                 }
             }
         });
