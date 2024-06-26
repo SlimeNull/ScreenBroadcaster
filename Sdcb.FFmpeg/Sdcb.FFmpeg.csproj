@@ -14,7 +14,7 @@
     <Description>FFmpeg auto generated unsafe bindings for C#/.NET and Mono.</Description>
     <Nullable>enable</Nullable>
     <LangVersion>11</LangVersion>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
