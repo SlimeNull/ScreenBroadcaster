@@ -8,6 +8,7 @@
     <s:String x:Key="String.Status">状态</s:String>
     <s:String x:Key="String.ClientCount">客户端数量</s:String>
     <s:String x:Key="String.FrameRate">帧率</s:String>
+    <s:String x:Key="String.Clients">客户端</s:String>
     <s:String x:Key="String.General">常规</s:String>
     <s:String x:Key="String.Address">地址</s:String>
     <s:String x:Key="String.Port">端口</s:String>
