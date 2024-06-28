@@ -762,6 +762,11 @@ public partial class MainWindow : Window
                     _notifyClientCanNotControl = null;
                     clientStream.WriteValue(ServerToClientPacketKind.NotifyCanNotControl);
                 }
+                else if (_notifyRejectClientControl == clientInfo.TcpClient)
+                {
+                    _notifyRejectClientControl = null;
+                    clientStream.WriteValue(ServerToClientPacketKind.NotifyRejectControl);
+                }
             }
         });
     }
