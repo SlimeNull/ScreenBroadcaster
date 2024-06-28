@@ -69,6 +69,9 @@ public partial class MainWindow : Window
     private TcpClient? _clientCanControl;
 
     [ObservableProperty]
+    private string _controllerClientUserName = string.Empty;
+
+    [ObservableProperty]
     private string _address = "0.0.0.0";
 
     [ObservableProperty]
@@ -857,7 +860,11 @@ public partial class MainWindow : Window
                                     }
 
                                     _notifyClientCanControl = clientInfo.TcpClient;
-                                    _ = Dispatcher.InvokeAsync(() => ClientCanControl = clientInfo.TcpClient);
+                                    _ = Dispatcher.InvokeAsync(() =>
+                                    {
+                                        ClientCanControl = clientInfo.TcpClient;
+                                        ControllerClientUserName = clientUserName;
+                                    });
                                 }
                                 else
                                 {
@@ -870,7 +877,11 @@ public partial class MainWindow : Window
                     {
                         if (ClientCanControl == clientInfo.TcpClient)
                         {
-                            _ = Dispatcher.InvokeAsync(() => ClientCanControl = null);
+                            _ = Dispatcher.InvokeAsync(() =>
+                            {
+                                ClientCanControl = null;
+                                ControllerClientUserName = string.Empty;
+                            });
                         }
                     }
                 }
@@ -916,7 +927,13 @@ public partial class MainWindow : Window
         _ = Stop();
     }
 
-    private void Hyperlink_Click(object sender, RoutedEventArgs e)
+    private void StopControl_Click(object sender, RoutedEventArgs e)
+    {
+        _notifyClientCanNotControl = ClientCanControl;
+        ClientCanControl = null;
+    }
+
+    private void BrowserHyperlink_Click(object sender, RoutedEventArgs e)
     {
         try
         {
