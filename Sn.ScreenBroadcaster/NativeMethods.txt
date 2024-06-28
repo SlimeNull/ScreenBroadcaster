@@ -29,3 +29,6 @@ GetObject
 BITMAP
 
 SendInput
+MessageBox
+MessageBoxEx
+MessageBoxTimeout

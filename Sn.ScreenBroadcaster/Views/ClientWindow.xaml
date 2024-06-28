@@ -3,19 +3,26 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Sn.ScreenBroadcaster"
+        xmlns:local="clr-namespace:Sn.ScreenBroadcaster.Views"
         mc:Ignorable="d"
         Closing="Window_Closing"
         Title="Sn.ScreenBroadcaster Client" Height="450" Width="800"
         WindowStartupLocation="CenterOwner"
         Icon="/Assets/Icon64.png"
-        d:DataContext="{d:DesignInstance Type=local:ClientWindow}">
-    
-    <Grid>
+        d:DataContext="{d:DesignInstance Type={x:Type local:ClientWindow}}">
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Request Control"
+                      Command="{Binding RequestControlCommand}"/>
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom">
+            <TextBlock Text="Can control:"/>
+        </StatusBar>
         <Image Name="frameImage" 
                Stretch="Uniform"
                MouseMove="FrameImage_MouseMove"
                MouseDown="FrameImage_MouseDown"
                MouseUp="FrameImage_MouseUp"/>
-    </Grid>
+    </DockPanel>
 </Window>

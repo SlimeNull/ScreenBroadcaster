@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -57,18 +58,20 @@ namespace Sn.ScreenBroadcaster.Utilities
         public static unsafe void WriteValue<TStruct>(this Stream stream, in TStruct value)
             where TStruct : unmanaged
         {
+#if NET6_0_OR_GREATER
+            ref var byteRef = ref Unsafe.As<TStruct, byte>(ref Unsafe.AsRef(in value));
+            var span = MemoryMarshal.CreateReadOnlySpan(ref byteRef, sizeof(TStruct));
+            stream.Write(span);
+#else
             fixed (TStruct* valuePtr = &value)
             {
-#if NET6_0_OR_GREATER
-                stream.Write(new Span<byte>(valuePtr, sizeof(TStruct)));
-#else
                 byte* ptr = (byte*)(void*)valuePtr;
                 byte[] buffer = new byte[sizeof(TStruct)];
 
                 Marshal.Copy((nint)ptr, buffer, 0, buffer.Length);
                 stream.Write(buffer, 0, buffer.Length);
-#endif
             }
+#endif
         }
     }
 }

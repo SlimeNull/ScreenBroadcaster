@@ -4,7 +4,7 @@ using Windows.Win32.UI.Input.KeyboardAndMouse;
 namespace Sn.ScreenBroadcaster.Data.Packets;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ControlPacketData
+internal struct ControlPacket
 {
     public ControlKind Kind;
     public InputUnion Input;

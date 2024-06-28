@@ -35,4 +35,10 @@
     <s:String x:Key="String.Version">版本</s:String>
     <s:String x:Key="String.Remark">备注</s:String>
     <s:String x:Key="String.Content.Remark">此程序是完全开源且免费的. 你可以从上方的仓库中下载此程序的最新版本.</s:String>
+
+    <s:String x:Key="String.GrantControlPermission">授权控制</s:String>
+    <s:String x:Key="String.Tip">提示</s:String>
+
+    <s:String x:Key="StringFormat.ClientRequestControl">{0} 正在请求控制你的电脑, 是否允许?</s:String>
+    <s:String x:Key="StringFormat.NowYouCanControl">现在你可以控制远程电脑了.</s:String>
 </ResourceDictionary>

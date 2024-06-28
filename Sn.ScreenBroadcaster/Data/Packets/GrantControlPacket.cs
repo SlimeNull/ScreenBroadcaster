@@ -3,7 +3,7 @@
 namespace Sn.ScreenBroadcaster.Data.Packets;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct GrantControlInfo
+public struct GrantControlPacket
 {
     public bool IsAdministrator;
 }

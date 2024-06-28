@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LibScreenCapture;
@@ -188,6 +189,7 @@ public partial class MainWindow : Window
     private TcpClient? _clientCanControl;
     private TcpClient? _notifyClientCanControl;
     private TcpClient? _notifyClientCanNotControl;
+    private TcpClient? _notifyRejectClientControl;
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -747,7 +749,7 @@ public partial class MainWindow : Window
                 {
                     _notifyClientCanControl = null;
                     clientStream.WriteValue(ServerToClientPacketKind.NotifyCanControl);
-                    clientStream.WriteValue(new GrantControlInfo()
+                    clientStream.WriteValue(new GrantControlPacket()
                     {
                         IsAdministrator = PermissionUtilities.IsAdministrator(),
                     });
@@ -776,19 +778,17 @@ public partial class MainWindow : Window
 
                 if (packetKind == ClientToServerPacketKind.Control)
                 {
-                    var control = clientStream.ReadValue<ControlPacketData>();
+                    var control = clientStream.ReadValue<ControlPacket>();
 
-#if !DEBUG
                     if (_clientCanControl != clientInfo.TcpClient)
                         continue;
-#endif
 
                     Windows.Win32.UI.Input.KeyboardAndMouse.INPUT input = default;
                     input.type = (Windows.Win32.UI.Input.KeyboardAndMouse.INPUT_TYPE)control.Kind;
 
                     switch (control.Kind)
                     {
-                        case ControlPacketData.ControlKind.Mouse:
+                        case ControlPacket.ControlKind.Mouse:
                         {
                             if ((control.Input.MouseInput.dwFlags | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE) != 0)
                             {
@@ -800,12 +800,12 @@ public partial class MainWindow : Window
 
                             break;
                         }
-                        case ControlPacketData.ControlKind.Keyboard:
+                        case ControlPacket.ControlKind.Keyboard:
                         {
                             input.Anonymous.ki = control.Input.KeyboardInput;
                             break;
                         }
-                        case ControlPacketData.ControlKind.Hardware:
+                        case ControlPacket.ControlKind.Hardware:
                         {
                             input.Anonymous.hi = control.Input.HardwareInput;
                             break;
@@ -815,6 +815,51 @@ public partial class MainWindow : Window
                     unsafe
                     {
                         PInvoke.SendInput(new System.Span<Windows.Win32.UI.Input.KeyboardAndMouse.INPUT>(&input, 1), sizeof(Windows.Win32.UI.Input.KeyboardAndMouse.INPUT));
+                    }
+                }
+                else if (packetKind == ClientToServerPacketKind.RequestControl)
+                {
+                    unsafe
+                    {
+                        var request = clientStream.ReadValue<RequestControlPacket>();
+                        var clientUserName = new string(request.UserName);
+
+                        _ = Dispatcher.InvokeAsync(() =>
+                        {
+                            Show();
+                            Activate();
+
+                            var windowInteropHelper = new WindowInteropHelper(this);
+                            var result = PInvoke.MessageBoxTimeout(
+                                windowInteropHelper.Handle, 
+                                string.Format((string)FindResource("StringFormat.ClientRequestControl"), clientUserName), 
+                                (string)FindResource("String.GrantControlPermission"), 
+                                MESSAGEBOX_STYLE.MB_YESNO | MESSAGEBOX_STYLE.MB_ICONQUESTION, 
+                                0, 
+                                10000);
+
+                            if (result == MESSAGEBOX_RESULT.IDYES)
+                            {
+                                if (_clientCanControl != null)
+                                {
+                                    _notifyClientCanNotControl = _clientCanControl;
+                                }
+
+                                _clientCanControl = clientInfo.TcpClient;
+                                _notifyClientCanControl = clientInfo.TcpClient;
+                            }
+                            else
+                            {
+                                _notifyRejectClientControl = clientInfo.TcpClient;
+                            }
+                        });
+                    }
+                }
+                else if (packetKind == ClientToServerPacketKind.RelinquishControl)
+                {
+                    if (_clientCanControl == clientInfo.TcpClient)
+                    {
+                        _clientCanControl = null;
                     }
                 }
             }

@@ -46,7 +46,7 @@ namespace Sn.ScreenBroadcaster.Views
 
         private readonly Frame _yuvFrame = new Frame();
         private readonly ConcurrentQueue<FrameData> _frames = new();
-        private readonly ConcurrentQueue<ControlPacketData> _controlPackets = new();
+        private readonly ConcurrentQueue<ControlPacket> _controlPackets = new();
 
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _clientTask;
@@ -64,7 +64,7 @@ namespace Sn.ScreenBroadcaster.Views
         private bool _canControl;
 
         [ObservableProperty]
-        private GrantControlInfo _controlInfo;
+        private GrantControlPacket _controlInfo;
 
 
 
@@ -146,6 +146,12 @@ namespace Sn.ScreenBroadcaster.Views
             Close();
         }
 
+        [RelayCommand]
+        public void RequestControl()
+        {
+            _requestControl = true;
+        }
+
         private Task NetworkReceivingLoop()
         {
             return Task.Run(() =>
@@ -207,7 +213,7 @@ namespace Sn.ScreenBroadcaster.Views
                         }
                         else if (packetKind == ServerToClientPacketKind.NotifyCanControl)
                         {
-                            var info = clientStream.ReadValue<GrantControlInfo>();
+                            var info = clientStream.ReadValue<GrantControlPacket>();
 
                             _ = Dispatcher.InvokeAsync(() =>
                             {
@@ -272,6 +278,21 @@ namespace Sn.ScreenBroadcaster.Views
                 {
                     while (!cancellationToken.IsCancellationRequested)
                     {
+                        if (_requestControl)
+                        {
+                            _requestControl = false;
+
+                            clientStream.WriteValue(ClientToServerPacketKind.RequestControl);
+                            clientStream.WriteValue(RequestControlPacket.Create(Environment.UserName));
+                        }
+
+                        if (_relinquishControl)
+                        {
+                            _relinquishControl = false;
+
+                            clientStream.WriteValue(ClientToServerPacketKind.RelinquishControl);
+                        }
+
                         if (_controlPackets.TryDequeue(out var controlPacketData))
                         {
                             clientStream.WriteValue(ClientToServerPacketKind.Control);
@@ -433,9 +454,9 @@ namespace Sn.ScreenBroadcaster.Views
             var y = (relativePosition.Y / element.ActualHeight) * 65535;
 
             var control =
-                new ControlPacketData()
+                new ControlPacket()
                 {
-                    Kind = ControlPacketData.ControlKind.Mouse,
+                    Kind = ControlPacket.ControlKind.Mouse,
                 };
 
             control.Input.MouseInput.dx = (int)x;
@@ -459,9 +480,9 @@ namespace Sn.ScreenBroadcaster.Views
             var y = (relativePosition.Y / element.ActualHeight) * 65535;
 
             var control =
-                new ControlPacketData()
+                new ControlPacket()
                 {
-                    Kind = ControlPacketData.ControlKind.Mouse,
+                    Kind = ControlPacket.ControlKind.Mouse,
                 };
 
             control.Input.MouseInput.dx = (int)x;
@@ -504,9 +525,9 @@ namespace Sn.ScreenBroadcaster.Views
             var y = (relativePosition.Y / element.ActualHeight) * 65535;
 
             var control =
-                new ControlPacketData()
+                new ControlPacket()
                 {
-                    Kind = ControlPacketData.ControlKind.Mouse,
+                    Kind = ControlPacket.ControlKind.Mouse,
                 };
 
             control.Input.MouseInput.dx = (int)x;
