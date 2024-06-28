@@ -569,7 +569,9 @@ namespace Sn.ScreenBroadcaster.Views
 
             control.Input.MouseInput.dx = (int)x;
             control.Input.MouseInput.dy = (int)y;
-            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE;
+            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE
+                | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE
+                | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
 
             _controlPackets.Enqueue(control);
         }
@@ -595,7 +597,9 @@ namespace Sn.ScreenBroadcaster.Views
 
             control.Input.MouseInput.dx = (int)x;
             control.Input.MouseInput.dy = (int)y;
-            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE;
+            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE
+                | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE
+                | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
 
             if (e.ChangedButton == MouseButton.Left && e.MouseDevice.LeftButton == MouseButtonState.Pressed)
             {
@@ -640,7 +644,9 @@ namespace Sn.ScreenBroadcaster.Views
 
             control.Input.MouseInput.dx = (int)x;
             control.Input.MouseInput.dy = (int)y;
-            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE;
+            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE
+                | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE
+                | MOUSE_EVENT_FLAGS.MOUSEEVENTF_VIRTUALDESK;
 
             if (e.ChangedButton == MouseButton.Left && e.MouseDevice.LeftButton == MouseButtonState.Released)
             {

@@ -43,12 +43,17 @@ public partial class MainWindow : Window
 
         LoadScreens();
         Screen = AvailableScreens.FirstOrDefault();
+
+        _totalScreenWidth = ScreenInfo.GetTotalScreenWidth(AvailableScreens);
+        _totalScreenHeight = ScreenInfo.GetTotalScreenHeight(AvailableScreens);
     }
 
     // readonly
 
     private int _primaryScreenWidth = ScreenInfo.GetPrimaryScreenWidth();
     private int _primaryScreenHeight = ScreenInfo.GetPrimaryScreenHeight();
+    private int _totalScreenWidth;
+    private int _totalScreenHeight;
 
     // atom status
 
@@ -805,9 +810,12 @@ public partial class MainWindow : Window
                             {
                                 if ((control.Input.MouseInput.dwFlags | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE) != 0)
                                 {
+                                    control.Input.MouseInput.dx = control.Input.MouseInput.dx * Screen.Width / _totalScreenWidth;
+                                    control.Input.MouseInput.dy = control.Input.MouseInput.dy * Screen.Height / _totalScreenHeight;
+
                                     // 参考屏幕偏移量
-                                    control.Input.MouseInput.dx += _screen.X * 65535 / _primaryScreenWidth;
-                                    control.Input.MouseInput.dy += _screen.Y * 65535 / _primaryScreenHeight;
+                                    control.Input.MouseInput.dx += Screen.X * 65535 / _totalScreenWidth;
+                                    control.Input.MouseInput.dy += Screen.Y * 65535 / _totalScreenHeight;
                                 }
 
                                 input.Anonymous.mi = control.Input.MouseInput;
