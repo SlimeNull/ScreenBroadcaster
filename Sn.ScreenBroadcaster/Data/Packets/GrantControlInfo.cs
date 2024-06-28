@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Sn.ScreenBroadcaster.Data;
+namespace Sn.ScreenBroadcaster.Data.Packets;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct GrantControlInfo

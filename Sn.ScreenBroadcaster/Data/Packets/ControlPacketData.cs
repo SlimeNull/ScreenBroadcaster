@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 
-namespace Sn.ScreenBroadcaster.Data;
+namespace Sn.ScreenBroadcaster.Data.Packets;
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct ControlPacketData
