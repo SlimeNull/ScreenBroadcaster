@@ -37,3 +37,6 @@ CallNextHookEx
 UnhookWindowsHookEx
 
 KBDLLHOOKSTRUCT
+MSLLHOOKSTRUCT
+
+WM_*

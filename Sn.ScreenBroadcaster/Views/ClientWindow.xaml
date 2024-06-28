@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sn.ScreenBroadcaster.Views"
         xmlns:controls="clr-namespace:Sn.ScreenBroadcaster.Controls"
+        xmlns:ws="https://schemas.elecho.dev/wpfsuite"
         mc:Ignorable="d"
         Closing="Window_Closing"
         Title="Sn.ScreenBroadcaster Client" Height="450" Width="800"
@@ -12,13 +13,29 @@
         Icon="/Assets/Icon64.png"
         d:DataContext="{d:DesignInstance Type={x:Type local:ClientWindow}}">
 
+    <Window.Resources>
+        <ws:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <ws:ValueConverterGroup x:Key="InvertBooleanToVisibilityConverter">
+            <ws:InvertBooleanConverter />
+            <ws:BooleanToVisibilityConverter />
+        </ws:ValueConverterGroup>
+    </Window.Resources>
+
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Request Control"
-                      Command="{Binding RequestControlCommand}"/>
+                      Command="{Binding RequestControlCommand}"
+                      Visibility="{Binding CanControl,Converter={StaticResource InvertBooleanToVisibilityConverter}}" />
+            <MenuItem Header="Relinquish Control"
+                      Command="{Binding RelinquishControlCommand}"
+                      Visibility="{Binding CanControl,Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">
-            <TextBlock Text="Can control:"/>
+            <!--<TextBlock Text="Can control:"/>-->
+            <ws:StackPanel Orientation="Horizontal">
+                <TextBlock Text="{StaticResource String.FrameRate}"/>
+                <TextBlock Text="{Binding FrameRate,StringFormat=': {0}'}" />
+            </ws:StackPanel>
         </StatusBar>
         <controls:FrameImage x:Name="frameImage"
                              Focusable="True"
