@@ -792,6 +792,7 @@ public partial class MainWindow : Window
                         {
                             if ((control.Input.MouseInput.dwFlags | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE) != 0)
                             {
+                                // 参考屏幕偏移量
                                 control.Input.MouseInput.dx += _screen.X * 65535 / _primaryScreenWidth;
                                 control.Input.MouseInput.dy += _screen.Y * 65535 / _primaryScreenHeight;
                             }

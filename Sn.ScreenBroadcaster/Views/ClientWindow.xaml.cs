@@ -14,6 +14,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
@@ -27,6 +28,7 @@ using Sdcb.FFmpeg.Utils;
 using Sn.ScreenBroadcaster.Data;
 using Sn.ScreenBroadcaster.Data.Packets;
 using Sn.ScreenBroadcaster.Utilities;
+using Windows.Win32;
 
 namespace Sn.ScreenBroadcaster.Views
 {
@@ -219,6 +221,16 @@ namespace Sn.ScreenBroadcaster.Views
                             {
                                 CanControl = true;
                                 ControlInfo = info;
+
+                                var windowInteropHelper = new WindowInteropHelper(this);
+
+                                PInvoke.MessageBoxTimeout(
+                                    windowInteropHelper.Handle,
+                                    (string)FindResource("String.NowYouCanControl"),
+                                    (string)FindResource("String.Tip"),
+                                    Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE.MB_OK | Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE.MB_ICONINFORMATION,
+                                    0,
+                                    5000);
                             });
                         }
                         else if (packetKind == ServerToClientPacketKind.NotifyCanNotControl)
@@ -226,6 +238,31 @@ namespace Sn.ScreenBroadcaster.Views
                             _ = Dispatcher.InvokeAsync(() =>
                             {
                                 CanControl = false;
+
+                                var windowInteropHelper = new WindowInteropHelper(this);
+
+                                PInvoke.MessageBoxTimeout(
+                                    windowInteropHelper.Handle,
+                                    (string)FindResource("String.NowYouCanNotControl"),
+                                    (string)FindResource("String.Tip"),
+                                    Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE.MB_OK | Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE.MB_ICONINFORMATION,
+                                    0,
+                                    5000);
+                            });
+                        }
+                        else if (packetKind == ServerToClientPacketKind.NotifyRejectControl)
+                        {
+                            _ = Dispatcher.InvokeAsync(() =>
+                            {
+                                var windowInteropHelper = new WindowInteropHelper(this);
+
+                                PInvoke.MessageBoxTimeout(
+                                    windowInteropHelper.Handle,
+                                    (string)FindResource("String.RemoteComputerRejectedYourControlRequest"),
+                                    (string)FindResource("String.Tip"),
+                                    Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE.MB_OK | Windows.Win32.UI.WindowsAndMessaging.MESSAGEBOX_STYLE.MB_ICONERROR,
+                                    0,
+                                    5000);
                             });
                         }
                     }

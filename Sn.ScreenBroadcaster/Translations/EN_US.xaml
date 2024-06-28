@@ -38,7 +38,9 @@
 
     <s:String x:Key="String.GrantControlPermission">Grant control permission</s:String>
     <s:String x:Key="String.Tip">Tip</s:String>
+    <s:String x:Key="String.NowYouCanControl">Now you can control the remote computer.</s:String>
+    <s:String x:Key="String.NowYouCanNotControl">Now you can't control the remote computer.</s:String>
+    <s:String x:Key="String.RemoteComputerRejectedYourControlRequest">The remote computer has rejected your request for control</s:String>
 
     <s:String x:Key="StringFormat.ClientRequestControl">{0} is requesting control of your computer, do you want to allow it?</s:String>
-    <s:String x:Key="StringFormat.NowYouCanControl">Now you can control the remote computer.</s:String>
 </ResourceDictionary>
