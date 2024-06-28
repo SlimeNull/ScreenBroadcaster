@@ -42,6 +42,8 @@ namespace Sn.ScreenBroadcaster.Views
     public partial class ClientWindow : Window
     {
         private readonly MainWindow _owner;
+        private readonly HOOKPROC _keyboardHookProc;
+        private readonly HOOKPROC _mouseHookProc;
 
         private bool _firstFrameDecoded;
 
@@ -64,7 +66,8 @@ namespace Sn.ScreenBroadcaster.Views
         private bool _requestControl;
         private bool _relinquishControl;
 
-        private HHOOK _hook;
+        private HHOOK _keyboardHookHandle;
+        private HHOOK _mouseHookHandle;
 
         [ObservableProperty]
         private bool _canControl;
@@ -79,6 +82,9 @@ namespace Sn.ScreenBroadcaster.Views
         public ClientWindow(MainWindow owner)
         {
             _owner = owner;
+            _keyboardHookProc = KeyboardHookProc;
+            _mouseHookProc = MouseHookProc;
+
             DataContext = this;
             InitializeComponent();
         }
@@ -515,9 +521,14 @@ namespace Sn.ScreenBroadcaster.Views
             if (sender is not FrameworkElement element)
                 return;
 
-            if (_hook == HHOOK.Null)
+            if (_keyboardHookHandle == HHOOK.Null)
             {
-                _hook = PInvoke.SetWindowsHookEx(Windows.Win32.UI.WindowsAndMessaging.WINDOWS_HOOK_ID.WH_KEYBOARD_LL, KeyboardHookCallback, HINSTANCE.Null, 0);
+                _keyboardHookHandle = PInvoke.SetWindowsHookEx(WINDOWS_HOOK_ID.WH_KEYBOARD_LL, _keyboardHookProc, HINSTANCE.Null, 0);
+            }
+
+            if (_mouseHookHandle == HHOOK.Null)
+            {
+                _mouseHookHandle = PInvoke.SetWindowsHookEx(WINDOWS_HOOK_ID.WH_MOUSE_LL, _mouseHookProc, HINSTANCE.Null, 0);
             }
         }
 
@@ -526,10 +537,16 @@ namespace Sn.ScreenBroadcaster.Views
             if (sender is not FrameworkElement element)
                 return;
 
-            if (_hook != HHOOK.Null)
+            if (_keyboardHookHandle != HHOOK.Null)
             {
-                PInvoke.UnhookWindowsHookEx(_hook);
-                _hook = HHOOK.Null;
+                PInvoke.UnhookWindowsHookEx(_keyboardHookHandle);
+                _keyboardHookHandle = HHOOK.Null;
+            }
+
+            if (_mouseHookHandle != HHOOK.Null)
+            {
+                PInvoke.UnhookWindowsHookEx(_mouseHookHandle);
+                _mouseHookHandle = HHOOK.Null;
             }
         }
 
@@ -666,11 +683,11 @@ namespace Sn.ScreenBroadcaster.Views
 
         }
 
-        private unsafe LRESULT KeyboardHookCallback(int code, WPARAM wParam, LPARAM lParam)
+        private unsafe LRESULT KeyboardHookProc(int code, WPARAM wParam, LPARAM lParam)
         {
             if (code < 0)
             {
-                return PInvoke.CallNextHookEx(_hook, code, wParam, lParam);
+                return PInvoke.CallNextHookEx(_keyboardHookHandle, code, wParam, lParam);
             }
 
             var key = *(KBDLLHOOKSTRUCT*)(nint)lParam;
@@ -690,6 +707,43 @@ namespace Sn.ScreenBroadcaster.Views
             _controlPackets.Enqueue(control);
 
             return (LRESULT)1;
+        }
+
+        private unsafe LRESULT MouseHookProc(int code, WPARAM wParam, LPARAM lParam)
+        {
+            if (code < 0)
+            {
+                return PInvoke.CallNextHookEx(_mouseHookHandle, code, wParam, lParam);
+            }
+
+            ref var mouse = ref *(MSLLHOOKSTRUCT*)(nint)lParam;
+
+            if (wParam == PInvoke.WM_MOUSEWHEEL)
+            {
+                var control = new ControlPacket();
+                control.Kind = ControlPacket.ControlKind.Mouse;
+                control.Input.MouseInput.dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL;
+                control.Input.MouseInput.mouseData = unchecked((uint)(int)(short)(mouse.mouseData >> 16));
+                
+                _controlPackets.Enqueue(control);
+
+                return (LRESULT)1;
+            }
+            else if (wParam == PInvoke.WM_MOUSEHWHEEL)
+            {
+                var control = new ControlPacket();
+                control.Kind = ControlPacket.ControlKind.Mouse;
+                control.Input.MouseInput.dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_HWHEEL;
+                control.Input.MouseInput.mouseData = unchecked((uint)(int)(short)(mouse.mouseData >> 16));
+
+                _controlPackets.Enqueue(control);
+
+                return (LRESULT)1;
+            }
+            else
+            {
+                return PInvoke.CallNextHookEx(_mouseHookHandle, code, wParam, lParam);
+            }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
