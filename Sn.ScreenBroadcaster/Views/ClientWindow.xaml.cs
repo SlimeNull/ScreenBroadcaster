@@ -58,6 +58,7 @@ namespace Sn.ScreenBroadcaster.Views
 
         private WriteableBitmap? _frameBitmap;
 
+        private int _frameCounter;
         private BroadcasterAppInfo _appInfo;
         private BroadcasterScreenInfo _screenInfo;
         private bool _requestControl;
@@ -65,14 +66,14 @@ namespace Sn.ScreenBroadcaster.Views
 
         private HHOOK _hook;
 
-
         [ObservableProperty]
         private bool _canControl;
 
         [ObservableProperty]
         private GrantControlPacket _controlInfo;
 
-
+        [ObservableProperty]
+        private int _frameRate;
 
 
         public ClientWindow(MainWindow owner)
@@ -105,7 +106,8 @@ namespace Sn.ScreenBroadcaster.Views
             _clientTask = Task.WhenAll(
                 NetworkReceivingLoop(),
                 NetworkSendingLoop(),
-                DecodeLoop());
+                DecodeLoop(),
+                StatusLoop());
         }
 
         public async Task Stop()
@@ -156,6 +158,13 @@ namespace Sn.ScreenBroadcaster.Views
         public void RequestControl()
         {
             _requestControl = true;
+        }
+        
+        [RelayCommand]
+        public void RelinquishControl()
+        {
+            _relinquishControl = true;
+            CanControl = false;
         }
 
         private Task NetworkReceivingLoop()
@@ -435,6 +444,7 @@ namespace Sn.ScreenBroadcaster.Views
                                     var codecResult = _videoDecoder.ReceiveFrame(_yuvFrame);
                                     if (codecResult == CodecResult.Success)
                                     {
+                                        Interlocked.Increment(ref _frameCounter);
                                         using var convertedFrame = new Frame()
                                         {
                                             Width = _yuvFrame.Width,
@@ -481,6 +491,23 @@ namespace Sn.ScreenBroadcaster.Views
                     });
                 }
             });
+        }
+
+        private async Task StatusLoop()
+        {
+            if (_cancellationTokenSource is null)
+            {
+                return;
+            }
+
+            var cancellationToken = _cancellationTokenSource.Token;
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(1000);
+
+                FrameRate = _frameCounter;
+                Interlocked.Exchange(ref _frameCounter, 0);
+            }
         }
 
         private void FrameImage_MouseEnter(object sender, MouseEventArgs e)

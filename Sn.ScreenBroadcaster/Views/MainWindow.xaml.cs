@@ -854,7 +854,8 @@ public partial class MainWindow : Window
 
                                 if (result == MESSAGEBOX_RESULT.IDYES)
                                 {
-                                    if (ClientCanControl != null)
+                                    if (ClientCanControl != null &&
+                                        ClientCanControl != clientInfo.TcpClient)
                                     {
                                         _notifyClientCanNotControl = ClientCanControl;
                                     }
