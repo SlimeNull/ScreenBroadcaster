@@ -27,3 +27,5 @@ LoadCursor
 GetDIBits
 GetObject
 BITMAP
+
+SendInput

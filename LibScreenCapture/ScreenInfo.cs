@@ -71,6 +71,26 @@ namespace LibScreenCapture
             return bottom - top;
         }
 
+        public static int GetPrimaryScreenWidth()
+        {
+            var hdc = PInvoke.GetDC(HWND.Null);
+            var result = PInvoke.GetDeviceCaps(hdc, GET_DEVICE_CAPS_INDEX.HORZRES);
+
+            PInvoke.ReleaseDC(HWND.Null, hdc);
+
+            return result;
+        }
+
+        public static int GetPrimaryScreenHeight()
+        {
+            var hdc = PInvoke.GetDC(HWND.Null);
+            var result = PInvoke.GetDeviceCaps(hdc, GET_DEVICE_CAPS_INDEX.VERTRES);
+
+            PInvoke.ReleaseDC(HWND.Null, hdc);
+
+            return result;
+        }
+
         public override string ToString()
         {
             if (IsPrimary)

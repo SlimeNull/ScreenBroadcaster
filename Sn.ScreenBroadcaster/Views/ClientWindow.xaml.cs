@@ -45,11 +45,28 @@ namespace Sn.ScreenBroadcaster.Views
 
         private readonly Frame _yuvFrame = new Frame();
         private readonly ConcurrentQueue<FrameData> _frames = new();
+        private readonly ConcurrentQueue<ControlPacketData> _controlPackets = new();
 
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _clientTask;
 
         private WriteableBitmap? _frameBitmap;
+
+        private BroadcasterAppInfo _appInfo;
+        private BroadcasterScreenInfo _screenInfo;
+        private bool _requestControl;
+        private bool _relinquishControl;
+
+
+
+        [ObservableProperty]
+        private bool _canControl;
+
+        [ObservableProperty]
+        private GrantControlInfo _controlInfo;
+
+
+
 
         public ClientWindow(MainWindow owner)
         {
@@ -67,8 +84,20 @@ namespace Sn.ScreenBroadcaster.Views
             _videoFrameConverter = new();
             _cancellationTokenSource = new();
 
+            try
+            {
+                _tcpClient.Connect(ipAddress, _owner.Port);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Failed to connect", MessageBoxButton.OK, MessageBoxImage.Error);
+                _ = StopAndClose();
+                return;
+            }
+
             _clientTask = Task.WhenAll(
-                NetworkLoop(new IPEndPoint(ipAddress, _owner.Port)),
+                NetworkReceivingLoop(),
+                NetworkSendingLoop(),
                 DecodeLoop());
         }
 
@@ -116,9 +145,9 @@ namespace Sn.ScreenBroadcaster.Views
             Close();
         }
 
-        private Task NetworkLoop(IPEndPoint remoteIPEndPoint)
+        private Task NetworkReceivingLoop()
         {
-            return Task.Run(async () =>
+            return Task.Run(() =>
             {
                 if (_tcpClient is null ||
                     _cancellationTokenSource is null)
@@ -128,20 +157,16 @@ namespace Sn.ScreenBroadcaster.Views
 
                 try
                 {
-                    await _tcpClient.ConnectAsync(remoteIPEndPoint.Address, remoteIPEndPoint.Port);
-
                     var clientStream = _tcpClient.GetStream();
-                    var appInfo = default(BroadcasterAppInfo);
-                    var screenInfo = default(BroadcasterScreenInfo);
                     var cancellationToken = _cancellationTokenSource.Token;
 
                     unsafe
                     {
-                        appInfo = clientStream.ReadStruct<BroadcasterAppInfo>();
-                        screenInfo = clientStream.ReadStruct<BroadcasterScreenInfo>();
+                        _appInfo = clientStream.ReadValue<BroadcasterAppInfo>();
+                        _screenInfo = clientStream.ReadValue<BroadcasterScreenInfo>();
                     }
 
-                    if (appInfo.Version != (Assembly.GetExecutingAssembly().GetName().Version?.Major ?? 0))
+                    if (_appInfo.Version != (Assembly.GetExecutingAssembly().GetName().Version?.Major ?? 0))
                     {
                         _ = Dispatcher.BeginInvoke(() =>
                         {
@@ -156,23 +181,100 @@ namespace Sn.ScreenBroadcaster.Views
                         // throw new Exception("This would never happen");
                     }
 
-                    _videoDecoder = new CodecContext(FFmpegUtilities.FindBestDecoder((Sdcb.FFmpeg.Raw.AVCodecID)screenInfo.CodecID, _owner.UseHardwareCodec))
+                    _videoDecoder = new CodecContext(FFmpegUtilities.FindBestDecoder((Sdcb.FFmpeg.Raw.AVCodecID)_screenInfo.CodecID, _owner.UseHardwareCodec))
                     {
-                        Width = screenInfo.Width,
-                        Height = screenInfo.Height,
-                        PixelFormat = (Sdcb.FFmpeg.Raw.AVPixelFormat)screenInfo.PixelFormat
+                        Width = _screenInfo.Width,
+                        Height = _screenInfo.Height,
+                        PixelFormat = (Sdcb.FFmpeg.Raw.AVPixelFormat)_screenInfo.PixelFormat
                     };
 
                     _videoDecoder.Open();
 
                     while (!cancellationToken.IsCancellationRequested)
                     {
-                        // block here
-                        var frame = FrameData.ReadFromStream(clientStream);
+                        var packetKind = clientStream.ReadValue<ServerToClientPacketKind>();
 
-                        lock (_frames)
+                        if (packetKind == ServerToClientPacketKind.Frame)
                         {
-                            _frames.Enqueue(frame);
+                            // block here
+                            var frame = FrameData.ReadFromStream(clientStream);
+
+                            lock (_frames)
+                            {
+                                _frames.Enqueue(frame);
+                            }
+                        }
+                        else if (packetKind == ServerToClientPacketKind.NotifyCanControl)
+                        {
+                            var info = clientStream.ReadValue<GrantControlInfo>();
+
+                            _ = Dispatcher.InvokeAsync(() =>
+                            {
+                                CanControl = true;
+                                ControlInfo = info;
+                            });
+                        }
+                        else if (packetKind == ServerToClientPacketKind.NotifyCanNotControl)
+                        {
+                            _ = Dispatcher.InvokeAsync(() =>
+                            {
+                                CanControl = false;
+                            });
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // pass
+                }
+                catch (FFmpegException ex)
+                {
+                    _ = Dispatcher.BeginInvoke(() =>
+                    {
+                        MessageBox.Show(this, ex.Message, "Decoder Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                        _ = StopAndClose();
+                    });
+                }
+                catch (EndOfStreamException)
+                {
+                    _ = Dispatcher.BeginInvoke(() =>
+                    {
+                        MessageBox.Show(this, "Disconnected from remote server", "Network Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                        _ = StopAndClose();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _ = Dispatcher.BeginInvoke(() =>
+                    {
+                        MessageBox.Show(this, ex.Message, "Network Issue", MessageBoxButton.OK, MessageBoxImage.Error);
+                        _ = StopAndClose();
+                    });
+                }
+            });
+        }
+
+        private Task NetworkSendingLoop()
+        {
+            return Task.Run(() =>
+            {
+                if (_tcpClient is null ||
+                    _cancellationTokenSource is null)
+                {
+                    return;
+                }
+
+                var clientStream = _tcpClient.GetStream();
+                var cancellationToken = _cancellationTokenSource.Token;
+
+                try
+                {
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        if (_controlPackets.TryDequeue(out var controlPacketData))
+                        {
+                            clientStream.WriteValue(ClientToServerPacketKind.Control);
+                            clientStream.WriteValue(controlPacketData);
                         }
                     }
                 }
@@ -316,6 +418,114 @@ namespace Sn.ScreenBroadcaster.Views
                     });
                 }
             });
+        }
+
+        private void FrameImage_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (sender is not FrameworkElement element)
+                return;
+            if (!CanControl)
+                return;
+
+            var relativePosition = e.MouseDevice.GetPosition(element);
+            var x = (relativePosition.X / element.ActualWidth) * 65535;
+            var y = (relativePosition.Y / element.ActualHeight) * 65535;
+
+            var control =
+                new ControlPacketData()
+                {
+                    Kind = ControlPacketData.ControlKind.Mouse,
+                };
+
+            control.Input.MouseInput.dx = (int)x;
+            control.Input.MouseInput.dy = (int)y;
+            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE;
+
+            _controlPackets.Enqueue(control);
+        }
+
+        private void FrameImage_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement element)
+                return;
+            if (!CanControl)
+                return;
+
+            Mouse.Capture(element);
+
+            var relativePosition = e.MouseDevice.GetPosition(element);
+            var x = (relativePosition.X / element.ActualWidth) * 65535;
+            var y = (relativePosition.Y / element.ActualHeight) * 65535;
+
+            var control =
+                new ControlPacketData()
+                {
+                    Kind = ControlPacketData.ControlKind.Mouse,
+                };
+
+            control.Input.MouseInput.dx = (int)x;
+            control.Input.MouseInput.dy = (int)y;
+            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE;
+
+            if (e.ChangedButton == MouseButton.Left && e.MouseDevice.LeftButton == MouseButtonState.Pressed)
+            {
+                control.Input.MouseInput.dwFlags |= Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN;
+            }
+            else if (e.ChangedButton == MouseButton.Right && e.MouseDevice.RightButton == MouseButtonState.Pressed)
+            {
+                control.Input.MouseInput.dwFlags |= Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN;
+            }
+            else if (e.ChangedButton == MouseButton.Middle && e.MouseDevice.MiddleButton == MouseButtonState.Pressed)
+            {
+                control.Input.MouseInput.dwFlags |= Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN;
+            }
+
+            _controlPackets.Enqueue(control);
+        }
+
+        private void FrameImage_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement element)
+                return;
+            if (!CanControl)
+                return;
+
+            if (element.IsMouseCaptured && 
+                e.LeftButton == MouseButtonState.Released &&
+                e.RightButton == MouseButtonState.Released &&
+                e.MiddleButton == MouseButtonState.Released)
+            {
+                element.ReleaseMouseCapture();
+            }
+
+            var relativePosition = e.MouseDevice.GetPosition(element);
+            var x = (relativePosition.X / element.ActualWidth) * 65535;
+            var y = (relativePosition.Y / element.ActualHeight) * 65535;
+
+            var control =
+                new ControlPacketData()
+                {
+                    Kind = ControlPacketData.ControlKind.Mouse,
+                };
+
+            control.Input.MouseInput.dx = (int)x;
+            control.Input.MouseInput.dy = (int)y;
+            control.Input.MouseInput.dwFlags = Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE;
+
+            if (e.ChangedButton == MouseButton.Left && e.MouseDevice.LeftButton == MouseButtonState.Released)
+            {
+                control.Input.MouseInput.dwFlags |= Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP;
+            }
+            else if (e.ChangedButton == MouseButton.Right && e.MouseDevice.RightButton == MouseButtonState.Released)
+            {
+                control.Input.MouseInput.dwFlags |= Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP;
+            }
+            else if (e.ChangedButton == MouseButton.Middle && e.MouseDevice.MiddleButton == MouseButtonState.Released)
+            {
+                control.Input.MouseInput.dwFlags |= Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP;
+            }
+
+            _controlPackets.Enqueue(control);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

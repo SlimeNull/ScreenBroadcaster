@@ -10,8 +10,12 @@
         WindowStartupLocation="CenterOwner"
         Icon="/Assets/Icon64.png"
         d:DataContext="{d:DesignInstance Type=local:ClientWindow}">
+    
     <Grid>
         <Image Name="frameImage" 
-               Stretch="Uniform"/>
+               Stretch="Uniform"
+               MouseMove="FrameImage_MouseMove"
+               MouseDown="FrameImage_MouseDown"
+               MouseUp="FrameImage_MouseUp"/>
     </Grid>
 </Window>

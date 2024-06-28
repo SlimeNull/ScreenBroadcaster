@@ -35,7 +35,7 @@ namespace Sn.ScreenBroadcaster.Utilities
 #endif
         }
 
-        public static unsafe TStruct ReadStruct<TStruct>(this Stream stream)
+        public static unsafe TStruct ReadValue<TStruct>(this Stream stream)
             where TStruct : unmanaged
         {
 #if NET6_0_OR_GREATER
@@ -54,18 +54,21 @@ namespace Sn.ScreenBroadcaster.Utilities
 #endif
         }
 
-        public static unsafe void WriteStruct<TStruct>(this Stream stream, TStruct value)
+        public static unsafe void WriteValue<TStruct>(this Stream stream, in TStruct value)
             where TStruct : unmanaged
         {
+            fixed (TStruct* valuePtr = &value)
+            {
 #if NET6_0_OR_GREATER
-            stream.Write(new Span<byte>(&value, sizeof(TStruct)));
+                stream.Write(new Span<byte>(valuePtr, sizeof(TStruct)));
 #else
-            byte* ptr = (byte*)(void*)&value;
-            byte[] buffer = new byte[sizeof(TStruct)];
+                byte* ptr = (byte*)(void*)valuePtr;
+                byte[] buffer = new byte[sizeof(TStruct)];
 
-            Marshal.Copy((nint)ptr, buffer, 0, buffer.Length);
-            stream.Write(buffer, 0, buffer.Length);
+                Marshal.Copy((nint)ptr, buffer, 0, buffer.Length);
+                stream.Write(buffer, 0, buffer.Length);
 #endif
+            }
         }
     }
 }

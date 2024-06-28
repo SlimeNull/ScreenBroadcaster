@@ -42,6 +42,11 @@ public partial class MainWindow : Window
         Screen = AvailableScreens.FirstOrDefault();
     }
 
+    // readonly
+
+    private int _primaryScreenWidth = ScreenInfo.GetPrimaryScreenWidth();
+    private int _primaryScreenHeight = ScreenInfo.GetPrimaryScreenHeight();
+
     // atom status
 
     private int _capturedFrameCount;
@@ -178,6 +183,10 @@ public partial class MainWindow : Window
     private Frame _yuvFrame = new Frame();
     private Packet _packetRef = new Packet();
     private VideoFrameConverter _videoFrameConverter = new();
+
+    private TcpClient? _clientCanControl;
+    private TcpClient? _notifyClientCanControl;
+    private TcpClient? _notifyClientCanNotControl;
 
     private CancellationTokenSource? _cancellationTokenSource;
 
@@ -447,8 +456,8 @@ public partial class MainWindow : Window
 
                     unsafe
                     {
-                        newClientStream.WriteStruct(appInfo);
-                        newClientStream.WriteStruct(screenInfo);
+                        newClientStream.WriteValue(appInfo);
+                        newClientStream.WriteValue(screenInfo);
                     }
 
                     lock (_clients)
@@ -456,7 +465,9 @@ public partial class MainWindow : Window
                         var newClientInfo = new TcpClientInfo(newClient, new());
 
                         _clients.Add(newClientInfo);
-                        _ = BroadcastLoop(newClientInfo);
+
+                        _ = ClientSendingLoop(newClientInfo);
+                        _ = ClientReceivingLoop(newClientInfo);
                     }
 
                     Dispatcher.Invoke(() =>
@@ -691,16 +702,15 @@ public partial class MainWindow : Window
         });
     }
 
-    private Task BroadcastLoop(TcpClientInfo clientInfo)
+    private Task ClientSendingLoop(TcpClientInfo clientInfo)
     {
         return Task.Run(() =>
         {
             if (_cancellationTokenSource is null)
                 return;
+
             var cancellationToken = _cancellationTokenSource.Token;
-
-            List<TcpClientInfo> clientsToRemove = new();
-
+            var clientStream = clientInfo.TcpClient.GetStream();
             while (!cancellationToken.IsCancellationRequested)
             {
                 while (clientInfo.Frames.Count > CountForDroppingFrame &&
@@ -713,12 +723,12 @@ public partial class MainWindow : Window
                 {
                     try
                     {
-                        var stream = clientInfo.TcpClient.GetStream();
-                        frameData.WriteToStream(stream);
+                        clientStream.WriteValue(ServerToClientPacketKind.Frame);
+                        frameData.WriteToStream(clientStream);
                     }
                     catch
                     {
-                        lock(_clients)
+                        lock (_clients)
                         {
                             _clients.Remove(clientInfo);
                         }
@@ -729,6 +739,81 @@ public partial class MainWindow : Window
                                 .Select(client => client.TcpClient.Client)
                                 .ToArray();
                         });
+                    }
+                }
+
+                if (_notifyClientCanControl == clientInfo.TcpClient)
+                {
+                    _notifyClientCanControl = null;
+                    clientStream.WriteValue(ServerToClientPacketKind.NotifyCanControl);
+                    clientStream.WriteValue(new GrantControlInfo()
+                    {
+                        IsAdministrator = PermissionUtilities.IsAdministrator(),
+                    });
+                }
+                else if (_notifyClientCanNotControl == clientInfo.TcpClient)
+                {
+                    _notifyClientCanNotControl = null;
+                    clientStream.WriteValue(ServerToClientPacketKind.NotifyCanNotControl);
+                }
+            }
+        });
+    }
+
+    private Task ClientReceivingLoop(TcpClientInfo clientInfo)
+    {
+        return Task.Run(() =>
+        {
+            if (_cancellationTokenSource is null)
+                return;
+
+            var cancellationToken = _cancellationTokenSource.Token;
+            var clientStream = clientInfo.TcpClient.GetStream();
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var packetKind = clientStream.ReadValue<ClientToServerPacketKind>();
+
+                if (packetKind == ClientToServerPacketKind.Control)
+                {
+                    var control = clientStream.ReadValue<ControlPacketData>();
+
+#if !DEBUG
+                    if (_clientCanControl != clientInfo.TcpClient)
+                        continue;
+#endif
+
+                    Windows.Win32.UI.Input.KeyboardAndMouse.INPUT input = default;
+                    input.type = (Windows.Win32.UI.Input.KeyboardAndMouse.INPUT_TYPE)control.Kind;
+
+                    switch (control.Kind)
+                    {
+                        case ControlPacketData.ControlKind.Mouse:
+                        {
+                            if ((control.Input.MouseInput.dwFlags | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE) != 0)
+                            {
+                                control.Input.MouseInput.dx += _screen.X * 65535 / _primaryScreenWidth;
+                                control.Input.MouseInput.dy += _screen.Y * 65535 / _primaryScreenHeight;
+                            }
+
+                            input.Anonymous.mi = control.Input.MouseInput;
+
+                            break;
+                        }
+                        case ControlPacketData.ControlKind.Keyboard:
+                        {
+                            input.Anonymous.ki = control.Input.KeyboardInput;
+                            break;
+                        }
+                        case ControlPacketData.ControlKind.Hardware:
+                        {
+                            input.Anonymous.hi = control.Input.HardwareInput;
+                            break;
+                        }
+                    }
+
+                    unsafe
+                    {
+                        PInvoke.SendInput(new System.Span<Windows.Win32.UI.Input.KeyboardAndMouse.INPUT>(&input, 1), sizeof(Windows.Win32.UI.Input.KeyboardAndMouse.INPUT));
                     }
                 }
             }
@@ -752,7 +837,7 @@ public partial class MainWindow : Window
                 Interlocked.Exchange(ref _capturedFrameCount, 0);
             }
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             // pass
         }

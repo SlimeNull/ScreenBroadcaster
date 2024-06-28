@@ -1,4 +1,6 @@
-﻿namespace Sn.ScreenBroadcaster.Data;
+﻿using System.Runtime.InteropServices;
+
+namespace Sn.ScreenBroadcaster.Data;
 
 public enum ConfigMode
 {
