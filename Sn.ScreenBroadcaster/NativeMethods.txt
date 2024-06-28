@@ -31,4 +31,9 @@ BITMAP
 SendInput
 MessageBox
 MessageBoxEx
-MessageBoxTimeout
+GetModuleHandle
+SetWindowsHookEx
+CallNextHookEx
+UnhookWindowsHookEx
+
+KBDLLHOOKSTRUCT

@@ -29,6 +29,9 @@ using Sn.ScreenBroadcaster.Data;
 using Sn.ScreenBroadcaster.Data.Packets;
 using Sn.ScreenBroadcaster.Utilities;
 using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Sn.ScreenBroadcaster.Views
 {
@@ -60,6 +63,7 @@ namespace Sn.ScreenBroadcaster.Views
         private bool _requestControl;
         private bool _relinquishControl;
 
+        private HHOOK _hook;
 
 
         [ObservableProperty]
@@ -479,6 +483,29 @@ namespace Sn.ScreenBroadcaster.Views
             });
         }
 
+        private void FrameImage_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (sender is not FrameworkElement element)
+                return;
+
+            if (_hook == HHOOK.Null)
+            {
+                _hook = PInvoke.SetWindowsHookEx(Windows.Win32.UI.WindowsAndMessaging.WINDOWS_HOOK_ID.WH_KEYBOARD_LL, KeyboardHookCallback, HINSTANCE.Null, 0);
+            }
+        }
+
+        private void FrameImage_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (sender is not FrameworkElement element)
+                return;
+
+            if (_hook != HHOOK.Null)
+            {
+                PInvoke.UnhookWindowsHookEx(_hook);
+                _hook = HHOOK.Null;
+            }
+        }
+
         private void FrameImage_MouseMove(object sender, MouseEventArgs e)
         {
             if (sender is not FrameworkElement element)
@@ -585,6 +612,57 @@ namespace Sn.ScreenBroadcaster.Views
             }
 
             _controlPackets.Enqueue(control);
+        }
+
+        private void FrameImage_KeyDown(object sender, KeyEventArgs e)
+        {
+            e.Handled = true;
+
+            if (!CanControl)
+                return;
+
+            var control = new ControlPacket()
+            {
+                Kind = ControlPacket.ControlKind.Keyboard,
+            };
+
+
+        }
+
+        private void FrameImage_KeyUp(object sender, KeyEventArgs e)
+        {
+            e.Handled = true;
+
+            if (!CanControl)
+                return;
+
+
+        }
+
+        private unsafe LRESULT KeyboardHookCallback(int code, WPARAM wParam, LPARAM lParam)
+        {
+            if (code < 0)
+            {
+                return PInvoke.CallNextHookEx(_hook, code, wParam, lParam);
+            }
+
+            var key = *(KBDLLHOOKSTRUCT*)(nint)lParam;
+
+            var control = new ControlPacket()
+            {
+                Kind = ControlPacket.ControlKind.Keyboard,
+            };
+
+            control.Input.KeyboardInput.wVk = (VIRTUAL_KEY)key.vkCode;
+
+            if ((key.flags & KBDLLHOOKSTRUCT_FLAGS.LLKHF_UP) != 0)
+            {
+                control.Input.KeyboardInput.dwFlags = KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP;
+            }
+
+            _controlPackets.Enqueue(control);
+
+            return (LRESULT)1;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

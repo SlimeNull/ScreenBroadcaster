@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -63,6 +64,9 @@ public partial class MainWindow : Window
 
     [ObservableProperty]
     private int _frameRate;
+
+    [ObservableProperty]
+    private TcpClient? _clientCanControl;
 
     [ObservableProperty]
     private string _address = "0.0.0.0";
@@ -186,7 +190,6 @@ public partial class MainWindow : Window
     private Packet _packetRef = new Packet();
     private VideoFrameConverter _videoFrameConverter = new();
 
-    private TcpClient? _clientCanControl;
     private TcpClient? _notifyClientCanControl;
     private TcpClient? _notifyClientCanNotControl;
     private TcpClient? _notifyRejectClientControl;
@@ -774,94 +777,107 @@ public partial class MainWindow : Window
             var clientStream = clientInfo.TcpClient.GetStream();
             while (!cancellationToken.IsCancellationRequested)
             {
-                var packetKind = clientStream.ReadValue<ClientToServerPacketKind>();
-
-                if (packetKind == ClientToServerPacketKind.Control)
+                try
                 {
-                    var control = clientStream.ReadValue<ControlPacket>();
+                    var packetKind = clientStream.ReadValue<ClientToServerPacketKind>();
 
-                    if (_clientCanControl != clientInfo.TcpClient)
-                        continue;
-
-                    Windows.Win32.UI.Input.KeyboardAndMouse.INPUT input = default;
-                    input.type = (Windows.Win32.UI.Input.KeyboardAndMouse.INPUT_TYPE)control.Kind;
-
-                    switch (control.Kind)
+                    if (packetKind == ClientToServerPacketKind.Control)
                     {
-                        case ControlPacket.ControlKind.Mouse:
+                        var control = clientStream.ReadValue<ControlPacket>();
+
+                        if (ClientCanControl != clientInfo.TcpClient)
+                            continue;
+
+                        Windows.Win32.UI.Input.KeyboardAndMouse.INPUT input = default;
+                        input.type = (Windows.Win32.UI.Input.KeyboardAndMouse.INPUT_TYPE)control.Kind;
+
+                        switch (control.Kind)
                         {
-                            if ((control.Input.MouseInput.dwFlags | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE) != 0)
+                            case ControlPacket.ControlKind.Mouse:
                             {
-                                // 参考屏幕偏移量
-                                control.Input.MouseInput.dx += _screen.X * 65535 / _primaryScreenWidth;
-                                control.Input.MouseInput.dy += _screen.Y * 65535 / _primaryScreenHeight;
-                            }
-
-                            input.Anonymous.mi = control.Input.MouseInput;
-
-                            break;
-                        }
-                        case ControlPacket.ControlKind.Keyboard:
-                        {
-                            input.Anonymous.ki = control.Input.KeyboardInput;
-                            break;
-                        }
-                        case ControlPacket.ControlKind.Hardware:
-                        {
-                            input.Anonymous.hi = control.Input.HardwareInput;
-                            break;
-                        }
-                    }
-
-                    unsafe
-                    {
-                        PInvoke.SendInput(new System.Span<Windows.Win32.UI.Input.KeyboardAndMouse.INPUT>(&input, 1), sizeof(Windows.Win32.UI.Input.KeyboardAndMouse.INPUT));
-                    }
-                }
-                else if (packetKind == ClientToServerPacketKind.RequestControl)
-                {
-                    unsafe
-                    {
-                        var request = clientStream.ReadValue<RequestControlPacket>();
-                        var clientUserName = new string(request.UserName);
-
-                        _ = Dispatcher.InvokeAsync(() =>
-                        {
-                            Show();
-                            Activate();
-
-                            var windowInteropHelper = new WindowInteropHelper(this);
-                            var result = PInvoke.MessageBoxTimeout(
-                                windowInteropHelper.Handle, 
-                                string.Format((string)FindResource("StringFormat.ClientRequestControl"), clientUserName), 
-                                (string)FindResource("String.GrantControlPermission"), 
-                                MESSAGEBOX_STYLE.MB_YESNO | MESSAGEBOX_STYLE.MB_ICONQUESTION, 
-                                0, 
-                                10000);
-
-                            if (result == MESSAGEBOX_RESULT.IDYES)
-                            {
-                                if (_clientCanControl != null)
+                                if ((control.Input.MouseInput.dwFlags | Windows.Win32.UI.Input.KeyboardAndMouse.MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE) != 0)
                                 {
-                                    _notifyClientCanNotControl = _clientCanControl;
+                                    // 参考屏幕偏移量
+                                    control.Input.MouseInput.dx += _screen.X * 65535 / _primaryScreenWidth;
+                                    control.Input.MouseInput.dy += _screen.Y * 65535 / _primaryScreenHeight;
                                 }
 
-                                _clientCanControl = clientInfo.TcpClient;
-                                _notifyClientCanControl = clientInfo.TcpClient;
+                                input.Anonymous.mi = control.Input.MouseInput;
+
+                                break;
                             }
-                            else
+                            case ControlPacket.ControlKind.Keyboard:
                             {
-                                _notifyRejectClientControl = clientInfo.TcpClient;
+                                input.Anonymous.ki = control.Input.KeyboardInput;
+                                break;
                             }
-                        });
+                            case ControlPacket.ControlKind.Hardware:
+                            {
+                                input.Anonymous.hi = control.Input.HardwareInput;
+                                break;
+                            }
+                        }
+
+                        unsafe
+                        {
+                            PInvoke.SendInput(new System.Span<Windows.Win32.UI.Input.KeyboardAndMouse.INPUT>(&input, 1), sizeof(Windows.Win32.UI.Input.KeyboardAndMouse.INPUT));
+                        }
+                    }
+                    else if (packetKind == ClientToServerPacketKind.RequestControl)
+                    {
+                        unsafe
+                        {
+                            var request = clientStream.ReadValue<RequestControlPacket>();
+                            var clientUserName = new string(request.UserName);
+
+                            _ = Dispatcher.InvokeAsync(() =>
+                            {
+                                Show();
+                                Activate();
+
+                                var windowInteropHelper = new WindowInteropHelper(this);
+                                var result = PInvoke.MessageBoxTimeout(
+                                windowInteropHelper.Handle,
+                                string.Format((string)FindResource("StringFormat.ClientRequestControl"), clientUserName),
+                                (string)FindResource("String.GrantControlPermission"),
+                                MESSAGEBOX_STYLE.MB_YESNO | MESSAGEBOX_STYLE.MB_ICONQUESTION,
+                                0,
+                                10000);
+
+                                if (result == MESSAGEBOX_RESULT.IDYES)
+                                {
+                                    if (ClientCanControl != null)
+                                    {
+                                        _notifyClientCanNotControl = ClientCanControl;
+                                    }
+
+                                    _notifyClientCanControl = clientInfo.TcpClient;
+                                    _ = Dispatcher.InvokeAsync(() => ClientCanControl = clientInfo.TcpClient);
+                                }
+                                else
+                                {
+                                    _notifyRejectClientControl = clientInfo.TcpClient;
+                                }
+                            });
+                        }
+                    }
+                    else if (packetKind == ClientToServerPacketKind.RelinquishControl)
+                    {
+                        if (ClientCanControl == clientInfo.TcpClient)
+                        {
+                            _ = Dispatcher.InvokeAsync(() => ClientCanControl = null);
+                        }
                     }
                 }
-                else if (packetKind == ClientToServerPacketKind.RelinquishControl)
+                catch (IOException)
                 {
-                    if (_clientCanControl == clientInfo.TcpClient)
-                    {
-                        _clientCanControl = null;
-                    }
+                    // pass
+                    break;
+                }
+                catch (SocketException)
+                {
+                    // pass
+                    break;
                 }
             }
         });

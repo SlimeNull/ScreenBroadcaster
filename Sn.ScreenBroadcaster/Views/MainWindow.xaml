@@ -115,11 +115,13 @@
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
                             <TextBlock Text="{DynamicResource String.Address}" />
-                            <TextBox Text="{Binding Address,UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Text="{Binding Address,UpdateSourceTrigger=PropertyChanged}" 
+                                     InputMethod.IsInputMethodEnabled="False"/>
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="{DynamicResource String.Port}" />
-                            <TextBox Text="{Binding Port,UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Text="{Binding Port,UpdateSourceTrigger=PropertyChanged}" 
+                                     InputMethod.IsInputMethodEnabled="False"/>
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
@@ -175,19 +177,23 @@
                                 <ws:StackPanel Spacing="8">
                                     <StackPanel>
                                         <TextBlock Text="{DynamicResource String.Width}" />
-                                        <TextBox Text="{Binding FrameWidth,UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Text="{Binding FrameWidth,UpdateSourceTrigger=PropertyChanged}" 
+                                                 InputMethod.IsInputMethodEnabled="False"/>
                                     </StackPanel>
                                     <StackPanel>
                                         <TextBlock Text="{DynamicResource String.Height}" />
-                                        <TextBox Text="{Binding FrameHeight,UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Text="{Binding FrameHeight,UpdateSourceTrigger=PropertyChanged}" 
+                                                 InputMethod.IsInputMethodEnabled="False"/>
                                     </StackPanel>
                                     <StackPanel>
                                         <TextBlock Text="{DynamicResource String.MaxFrameRate}" />
-                                        <TextBox Text="{Binding MaxFrameRate,UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Text="{Binding MaxFrameRate,UpdateSourceTrigger=PropertyChanged}" 
+                                                 InputMethod.IsInputMethodEnabled="False"/>
                                     </StackPanel>
                                     <StackPanel>
                                         <TextBlock Text="{DynamicResource String.BitRate}" />
-                                        <TextBox Text="{Binding BitRate,UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBox Text="{Binding BitRate,UpdateSourceTrigger=PropertyChanged}" 
+                                                 InputMethod.IsInputMethodEnabled="False"/>
                                     </StackPanel>
                                     <StackPanel >
                                         <TextBlock Text="{DynamicResource String.Codec}" />
@@ -215,7 +221,8 @@
                     <ws:StackPanel Spacing="8">
                         <StackPanel>
                             <TextBlock Text="{DynamicResource String.CountForDroppingFrame}" />
-                            <TextBox Text="{Binding CountForDroppingFrame,UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Text="{Binding CountForDroppingFrame,UpdateSourceTrigger=PropertyChanged}" 
+                                     InputMethod.IsInputMethodEnabled="False"/>
                         </StackPanel>
                         <StackPanel>
                             <CheckBox Content="{DynamicResource String.DropsKeyFrame}"

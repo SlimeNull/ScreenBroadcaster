@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sn.ScreenBroadcaster.Views"
+        xmlns:controls="clr-namespace:Sn.ScreenBroadcaster.Controls"
         mc:Ignorable="d"
         Closing="Window_Closing"
         Title="Sn.ScreenBroadcaster Client" Height="450" Width="800"
@@ -19,10 +20,16 @@
         <StatusBar DockPanel.Dock="Bottom">
             <TextBlock Text="Can control:"/>
         </StatusBar>
-        <Image Name="frameImage" 
-               Stretch="Uniform"
-               MouseMove="FrameImage_MouseMove"
-               MouseDown="FrameImage_MouseDown"
-               MouseUp="FrameImage_MouseUp"/>
+        <controls:FrameImage x:Name="frameImage"
+                             Focusable="True"
+                             InputMethod.IsInputMethodEnabled="False"
+                             Stretch="Uniform"
+                             MouseEnter="FrameImage_MouseEnter"
+                             MouseLeave="FrameImage_MouseLeave"
+                             MouseMove="FrameImage_MouseMove"
+                             MouseDown="FrameImage_MouseDown"
+                             MouseUp="FrameImage_MouseUp"
+                             KeyDown="FrameImage_KeyDown"
+                             KeyUp="FrameImage_KeyUp"/>
     </DockPanel>
 </Window>
