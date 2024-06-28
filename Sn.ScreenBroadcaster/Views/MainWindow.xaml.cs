@@ -104,7 +104,7 @@ public partial class MainWindow : Window
     private bool _useHardwareCodec = false;
 
     [ObservableProperty]
-    private bool _showMouseCursor = true;
+    private bool _captureMouseCursor = true;
 
     [ObservableProperty]
     private int _countForDroppingFrame = 20;
@@ -503,7 +503,7 @@ public partial class MainWindow : Window
             var cancellationToken = _cancellationTokenSource.Token;
             var lastFrameTime = DateTimeOffset.MinValue;
             var maxFrameRate = MaxFrameRate;
-            var showMouseCursor = ShowMouseCursor;
+            var captureMouseCursor = CaptureMouseCursor;
             var cursor = default(CursorLoader.CursorData?);
             var cursorX = default(int);
             var cursorY = default(int);
@@ -571,7 +571,7 @@ public partial class MainWindow : Window
                         cursorInfo.cbSize = (uint)sizeof(CURSORINFO);
                     }
 
-                    if (showMouseCursor &&
+                    if (captureMouseCursor &&
                         PInvoke.GetCursorInfo(ref cursorInfo) &&
                         cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
                     {

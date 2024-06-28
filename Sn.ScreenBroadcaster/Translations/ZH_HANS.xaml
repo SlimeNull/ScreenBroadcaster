@@ -25,7 +25,7 @@
     <s:String x:Key="String.Codec">编解码</s:String>
     <s:String x:Key="String.PixelFormat">像素格式</s:String>
     <s:String x:Key="String.UseHardwareCodec">使用硬件编解码器</s:String>
-    <s:String x:Key="String.ShowMouseCursor">显示鼠标光标</s:String>
+    <s:String x:Key="String.CaptureMouseCursor">捕获鼠标光标</s:String>
     <s:String x:Key="String.Network">网络</s:String>
     <s:String x:Key="String.CountForDroppingFrame">丢帧所需数量</s:String>
     <s:String x:Key="String.DropsKeyFrame">丢弃关键帧</s:String>

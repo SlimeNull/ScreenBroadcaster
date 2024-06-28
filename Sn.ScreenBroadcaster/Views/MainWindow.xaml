@@ -138,6 +138,10 @@
                             <ComboBox ItemsSource="{Binding AvailableScreens}"
                                       SelectedItem="{Binding Screen}"/>
                         </StackPanel>
+                        <StackPanel>
+                            <CheckBox Content="{DynamicResource String.CaptureMouseCursor}"
+                                      IsChecked="{Binding CaptureMouseCursor}" />
+                        </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 
@@ -202,10 +206,6 @@
                                 </ws:StackPanel>
                             </ws:ConditionalControl.ContentWhenFalse>
                         </ws:ConditionalControl>
-                        <StackPanel>
-                            <CheckBox Content="{DynamicResource String.ShowMouseCursor}"
-                                      IsChecked="{Binding ShowMouseCursor}" />
-                        </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
 

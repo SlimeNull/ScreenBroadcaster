@@ -25,7 +25,7 @@
     <s:String x:Key="String.Codec">Codec</s:String>
     <s:String x:Key="String.PixelFormat">Pixel Format</s:String>
     <s:String x:Key="String.UseHardwareCodec">Use Hardware Codec</s:String>
-    <s:String x:Key="String.ShowMouseCursor">Show Mouse Cursor</s:String>
+    <s:String x:Key="String.CaptureMouseCursor">Capture Mouse Cursor</s:String>
     <s:String x:Key="String.Network">Network</s:String>
     <s:String x:Key="String.CountForDroppingFrame">Count For Dropping Frame</s:String>
     <s:String x:Key="String.DropsKeyFrame">Drops Key Frame</s:String>
