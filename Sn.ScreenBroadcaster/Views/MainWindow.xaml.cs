@@ -850,6 +850,8 @@ public partial class MainWindow : Window
 
                             _ = Dispatcher.InvokeAsync(() =>
                             {
+                                WindowState = WindowState.Normal;
+
                                 Show();
                                 Activate();
 
