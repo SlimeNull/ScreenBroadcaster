@@ -360,6 +360,7 @@ public partial class MainWindow : Window
 
             _cancellationTokenSource = new CancellationTokenSource();
 
+            ClientCanControl = null;
             BroadcastTask = Task.WhenAll(
                 NetworkLoop(),
                 CaptureLoop(),
@@ -420,6 +421,7 @@ public partial class MainWindow : Window
 
         _clients.Clear();
         ConnectedClients = Array.Empty<Socket>();
+        ClientCanControl = null;
     }
 
 
@@ -853,12 +855,12 @@ public partial class MainWindow : Window
 
                                 var windowInteropHelper = new WindowInteropHelper(this);
                                 var result = PInvoke.MessageBoxTimeout(
-                                windowInteropHelper.Handle,
-                                string.Format((string)FindResource("StringFormat.ClientRequestControl"), clientUserName),
-                                (string)FindResource("String.GrantControlPermission"),
-                                MESSAGEBOX_STYLE.MB_YESNO | MESSAGEBOX_STYLE.MB_ICONQUESTION,
-                                0,
-                                10000);
+                                    windowInteropHelper.Handle,
+                                    string.Format((string)FindResource("StringFormat.ClientRequestControl"), clientUserName),
+                                    (string)FindResource("String.GrantControlPermission"),
+                                    MESSAGEBOX_STYLE.MB_YESNO | MESSAGEBOX_STYLE.MB_ICONQUESTION,
+                                    0,
+                                    10000);
 
                                 if (result == MESSAGEBOX_RESULT.IDYES)
                                 {
