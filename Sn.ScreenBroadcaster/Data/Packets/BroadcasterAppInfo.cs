@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
+using SharpDX;
 
 namespace Sn.ScreenBroadcaster.Data.Packets
 {

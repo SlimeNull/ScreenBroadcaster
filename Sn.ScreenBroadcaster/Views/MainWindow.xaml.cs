@@ -125,8 +125,14 @@ public partial class MainWindow : Window
     [ObservableProperty]
     private bool _captureMouseCursor = true;
 
+
+    // network settings
+
     [ObservableProperty]
     private int _countForDroppingFrame = 20;
+
+    [ObservableProperty]
+    private bool _broadcastAddress = true;
 
     [ObservableProperty]
     private bool _throwsKeyFrame = false;
@@ -145,6 +151,8 @@ public partial class MainWindow : Window
             return version;
         }
     }
+
+    public ObservableCollection<BroadcasterServerInfo> AvailableServers { get; } = new();
 
     public ObservableCollection<ScreenInfo> AvailableScreens { get; } = new();
 
@@ -185,6 +193,8 @@ public partial class MainWindow : Window
         CaptureMethod.DesktopDuplication,
         CaptureMethod.BitBlt,
     };
+
+
 
     private IScreenCapture? _screenCapture;
     private nint _screenFrameBuffer;
@@ -393,6 +403,7 @@ public partial class MainWindow : Window
 
             ClientCanControl = null;
             BroadcastTask = Task.WhenAll(
+                BroadcastLoop(),
                 NetworkLoop(),
                 CaptureLoop(),
                 StatusLoop()
@@ -469,6 +480,45 @@ public partial class MainWindow : Window
         ClientCanControl = null;
     }
 
+    private Task BroadcastLoop()
+    {
+        if (!BroadcastAddress)
+            return Task.CompletedTask;
+
+        var broadcastMessage = default(byte[]);
+
+        unsafe
+        {
+            var messageValue = NetworkBroadcastData.Create();
+            var messageSpan = new Span<byte>((byte*)&messageValue, sizeof(NetworkBroadcastData));
+
+            broadcastMessage = messageSpan.ToArray();
+        }
+
+        return Task.Run(async () =>
+        {
+            if (_cancellationTokenSource is null)
+                return;
+
+
+            var cancellationToken = _cancellationTokenSource.Token;
+            var udpClient = new UdpClient(new IPEndPoint(IPAddress.Any, 0));
+            var remoteEndPoint = new IPEndPoint(IPAddress.Broadcast, 7650);
+
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(3000, cancellationToken);
+                    await udpClient.SendAsync(broadcastMessage, broadcastMessage.Length, remoteEndPoint);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // pass
+            }
+        });
+    }
 
     private Task NetworkLoop()
     {
@@ -981,6 +1031,84 @@ public partial class MainWindow : Window
         });
     }
 
+    private Task QueryServersLoop()
+    {
+        return Task.WhenAll(
+            Task.Run(RemoveTimeoutServers),
+            Task.Run(QueryNewServersLoop));
+
+        async Task RemoveTimeoutServers()
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            var timeoutServers = new List<BroadcasterServerInfo>();
+
+            while (true)
+            {
+                await Task.Delay(1000);
+
+                var timeNow = DateTimeOffset.Now;
+                timeoutServers.Clear();
+
+                foreach (var server in AvailableServers)
+                {
+                    if ((timeNow - server.LastTime) > timeout)
+                    {
+                        timeoutServers.Add(server);
+                    }
+                }
+
+                foreach (var server in timeoutServers)
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        AvailableServers.Remove(server);
+                    });
+                }
+            }
+        }
+
+        async Task QueryNewServersLoop()
+        {
+            var udpClient = new UdpClient(new IPEndPoint(IPAddress.Any, 7650));
+
+            while (true)
+            {
+                var received = await udpClient.ReceiveAsync();
+                var message = default(NetworkBroadcastData);
+
+                unsafe
+                {
+                    if (received.Buffer.Length != sizeof(NetworkBroadcastData))
+                    {
+                        continue;
+                    }
+
+                    fixed (byte* dataPtr = received.Buffer)
+                    {
+                        message = *(NetworkBroadcastData*)dataPtr;
+                    }
+                }
+
+                if (!message.IsValid())
+                {
+                    continue;
+                }
+
+                if (AvailableServers.FirstOrDefault(server => server.RemoteEndPoint.Equals(received.RemoteEndPoint)) is { } server)
+                {
+                    server.LastTime = DateTimeOffset.Now;
+                }
+                else
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        AvailableServers.Add(new BroadcasterServerInfo(received.RemoteEndPoint));
+                    });
+                }
+            }
+        }
+    }
+
     private async Task StatusLoop()
     {
         if (_cancellationTokenSource is null)
@@ -1002,6 +1130,11 @@ public partial class MainWindow : Window
         {
             // pass
         }
+    }
+
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        _ = QueryServersLoop();
     }
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

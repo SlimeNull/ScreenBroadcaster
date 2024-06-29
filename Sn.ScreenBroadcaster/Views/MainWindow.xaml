@@ -11,6 +11,7 @@
         Height="380" Width="550"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/Icon64.png"
+        Loaded="Window_Loaded"
         Closing="Window_Closing"
         d:Height="1500"
         d:DataContext="{d:DesignInstance Type=local:MainWindow}">
@@ -142,6 +143,8 @@
                             <TextBlock Text="{StaticResource String.Port}" />
                             <TextBox Text="{Binding Port,UpdateSourceTrigger=PropertyChanged}"
                                      InputMethod.IsInputMethodEnabled="False"/>
+                            <ComboBox IsEditable="True"
+                                      ItemsSource="{Binding AvailableServers}"/>
                         </StackPanel>
                     </ws:StackPanel>
                 </ws:GroupBox>
