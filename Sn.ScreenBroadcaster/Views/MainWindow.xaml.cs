@@ -187,6 +187,8 @@ public partial class MainWindow : Window
     };
 
     private IScreenCapture? _screenCapture;
+    private nint _screenFrameBuffer;
+
     private CursorLoader? _cursorLoader;
     private CodecContext? _videoEncoder;
     private SKSurface? _skSurface;
@@ -304,6 +306,7 @@ public partial class MainWindow : Window
         }
 
         var displayIndex = AvailableScreens.IndexOf(Screen);
+        var needDrawing = CaptureMouseCursor;
 
         if (displayIndex == -1)
         {
@@ -321,10 +324,38 @@ public partial class MainWindow : Window
                 _ => throw new Exception("This would never happened."),
             };
 
-            _cursorLoader = new CursorLoader();
 
-            // init SKSurface
-            _skSurface = SKSurface.Create(new SKImageInfo(_screenCapture.ScreenWidth, _screenCapture.ScreenHeight, SKColorType.Bgra8888, SKAlphaType.Opaque), _screenCapture.DataPointer, _screenCapture.Stride);
+            if (_screenFrameBuffer != IntPtr.Zero)
+            {
+                unsafe
+                {
+#if NET6_0_OR_GREATER
+                    NativeMemory.Free((void*)_screenFrameBuffer);
+#else
+                    Marshal.FreeHGlobal(_screenFrameBuffer);
+#endif
+                }
+
+                _screenFrameBuffer = IntPtr.Zero;
+            }
+
+            if (needDrawing)
+            {
+                unsafe
+                {
+#if NET6_0_OR_GREATER
+                    // init frame buffer
+                    _screenFrameBuffer = (nint)NativeMemory.Alloc((nuint)(_screenCapture.Stride * _screenCapture.ScreenHeight));
+#else
+                    _screenFrameBuffer = Marshal.AllocHGlobal(_screenCapture.Stride * _screenCapture.ScreenHeight);
+#endif
+                }
+
+                // init SKSurface
+                _skSurface = SKSurface.Create(new SKImageInfo(_screenCapture.ScreenWidth, _screenCapture.ScreenHeight, SKColorType.Bgra8888, SKAlphaType.Opaque), _screenFrameBuffer, _screenCapture.Stride);
+            }
+
+            _cursorLoader = new CursorLoader();
 
             var codec = FFmpegUtilities.FindBestEncoder(CodecId, UseHardwareCodec);
 
@@ -408,6 +439,20 @@ public partial class MainWindow : Window
             _videoEncoder = null;
         }
         catch { }
+
+        if (_screenFrameBuffer != IntPtr.Zero)
+        {
+            unsafe
+            {
+#if NET6_0_OR_GREATER
+                NativeMemory.Free((void*)_screenFrameBuffer);
+#else
+                Marshal.FreeHGlobal(_screenFrameBuffer);
+#endif
+            }
+
+            _screenFrameBuffer = IntPtr.Zero;
+        }
 
         foreach (var client in _clients)
         {
@@ -518,18 +563,20 @@ public partial class MainWindow : Window
         return Task.Run(() =>
         {
             if (_screenCapture is null ||
-                _cursorLoader is null ||
-                _skSurface is null ||
                 _videoEncoder is null ||
                 _cancellationTokenSource is null)
                 return;
 
-            _cursorLoader.Initialize();
+            if (_cursorLoader is not null)
+            {
+                _cursorLoader.Initialize();
+            }
 
             var pts = 0;
             var cancellationToken = _cancellationTokenSource.Token;
             var lastFrameTime = DateTimeOffset.MinValue;
             var maxFrameRate = MaxFrameRate;
+            var frameByteCount = _screenCapture.Stride * _screenCapture.ScreenHeight;
             var captureMouseCursor = CaptureMouseCursor;
             var cursor = default(CursorLoader.CursorData?);
             var cursorX = default(int);
@@ -599,6 +646,7 @@ public partial class MainWindow : Window
                     }
 
                     if (captureMouseCursor &&
+                        _cursorLoader is not null &&
                         PInvoke.GetCursorInfo(ref cursorInfo) &&
                         cursorInfo.flags == CURSORINFO_FLAGS.CURSOR_SHOWING)
                     {
@@ -617,7 +665,23 @@ public partial class MainWindow : Window
                     _screenCapture.Capture(TimeSpan.FromSeconds(0.1));
                     Interlocked.Add(ref _capturedFrameCount, 1);
 
-                    if (cursor is not null)
+                    var frameDataPtr = _screenCapture.DataPointer;
+
+                    if (_screenFrameBuffer != 0)
+                    {
+                        unsafe
+                        {
+#if NET7_0_OR_GREATER
+                            NativeMemory.Copy((void*)frameDataPtr, (void*)_screenFrameBuffer, (nuint)frameByteCount);
+#else
+                            Buffer.MemoryCopy((void*)frameDataPtr, (void*)_screenFrameBuffer, frameByteCount, frameByteCount);
+#endif
+                        }
+
+                        frameDataPtr = _screenFrameBuffer;
+                    }
+
+                    if (cursor is not null && _skSurface != null)
                     {
                         if (cursor.Value.DirectBitmap is not null)
                         {
@@ -637,7 +701,7 @@ public partial class MainWindow : Window
                     _bgraFrame.Width = _screenCapture.ScreenWidth;
                     _bgraFrame.Height = _screenCapture.ScreenHeight;
                     _bgraFrame.Format = (int)AVPixelFormat.Bgra;
-                    _bgraFrame.Data[0] = _screenCapture.DataPointer;
+                    _bgraFrame.Data[0] = frameDataPtr;
                     _bgraFrame.Linesize[0] = _screenCapture.Stride;
                     _bgraFrame.Pts = pts++;
 

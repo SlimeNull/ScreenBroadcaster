@@ -8,7 +8,7 @@
         xmlns:ws="https://schemas.elecho.dev/wpfsuite"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="Sn.ScreenBroadcaster Client" Height="450" Width="800"
+        Title="Sn.ScreenBroadcaster Client" Height="500" Width="800"
         WindowStartupLocation="CenterOwner"
         Icon="/Assets/Icon64.png"
         d:DataContext="{d:DesignInstance Type={x:Type local:ClientWindow}}">
