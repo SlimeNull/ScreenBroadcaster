@@ -815,6 +815,11 @@ public partial class MainWindow : Window
 
                         Dispatcher.Invoke(() =>
                         {
+                            if (ClientCanControl == clientInfo.TcpClient)
+                            {
+                                ClientCanControl = null;
+                            }
+
                             ConnectedClients = _clients
                                 .Select(client => client.TcpClient.Client)
                                 .ToArray();

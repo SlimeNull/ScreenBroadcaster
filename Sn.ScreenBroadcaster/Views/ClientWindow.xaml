@@ -31,7 +31,6 @@
                       Visibility="{Binding CanControl,Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </Menu>
         <StatusBar DockPanel.Dock="Bottom">
-            <!--<TextBlock Text="Can control:"/>-->
             <ws:StackPanel Orientation="Horizontal">
                 <TextBlock Text="{StaticResource String.FrameRate}"/>
                 <TextBlock Text="{Binding FrameRate,StringFormat=': {0}'}" />
