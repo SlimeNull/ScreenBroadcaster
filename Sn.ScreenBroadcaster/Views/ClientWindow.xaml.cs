@@ -729,7 +729,7 @@ namespace Sn.ScreenBroadcaster.Views
                 var control = new ControlPacket();
                 control.Kind = ControlPacket.ControlKind.Mouse;
                 control.Input.MouseInput.dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL;
-                control.Input.MouseInput.mouseData = unchecked((uint)(int)(short)(mouse.mouseData >> 16));
+                control.Input.MouseInput.mouseData = unchecked((uint)(short)(mouse.mouseData >> 16));
                 
                 _controlPackets.Enqueue(control);
 
@@ -740,7 +740,7 @@ namespace Sn.ScreenBroadcaster.Views
                 var control = new ControlPacket();
                 control.Kind = ControlPacket.ControlKind.Mouse;
                 control.Input.MouseInput.dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_HWHEEL;
-                control.Input.MouseInput.mouseData = unchecked((uint)(int)(short)(mouse.mouseData >> 16));
+                control.Input.MouseInput.mouseData = unchecked((uint)(short)(mouse.mouseData >> 16));
 
                 _controlPackets.Enqueue(control);
 
