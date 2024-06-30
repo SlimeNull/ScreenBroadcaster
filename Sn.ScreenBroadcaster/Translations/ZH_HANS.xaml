@@ -36,6 +36,11 @@
     <s:String x:Key="String.Remark">备注</s:String>
     <s:String x:Key="String.Content.Remark">此程序是完全开源且免费的. 你可以从上方的仓库中下载此程序的最新版本.</s:String>
 
+    <s:String x:Key="String.Action">操作</s:String>
+    <s:String x:Key="String.Option">选项</s:String>
+    <s:String x:Key="String.Exit">退出</s:String>
+    <s:String x:Key="String.Help">帮助</s:String>
+    
     <s:String x:Key="String.GrantControlPermission">授权控制</s:String>
     <s:String x:Key="String.Tip">提示</s:String>
     <s:String x:Key="String.NowYouCanControl">现在你可以控制远程计算机了.</s:String>

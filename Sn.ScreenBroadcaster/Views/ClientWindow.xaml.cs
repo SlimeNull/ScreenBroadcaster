@@ -520,6 +520,8 @@ namespace Sn.ScreenBroadcaster.Views
         {
             if (sender is not FrameworkElement element)
                 return;
+            if (!CanControl)
+                return;
 
             if (_keyboardHookHandle == HHOOK.Null)
             {

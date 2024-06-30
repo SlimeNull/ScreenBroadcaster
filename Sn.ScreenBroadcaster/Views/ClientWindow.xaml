@@ -22,18 +22,33 @@
     </Window.Resources>
 
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="Request Control"
-                      Command="{Binding RequestControlCommand}"
-                      Visibility="{Binding CanControl,Converter={StaticResource InvertBooleanToVisibilityConverter}}" />
-            <MenuItem Header="Relinquish Control"
-                      Command="{Binding RelinquishControlCommand}"
-                      Visibility="{Binding CanControl,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <Menu DockPanel.Dock="Top"
+              BorderThickness="0 0 0 1"
+              BorderBrush="{StaticResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+            <MenuItem Header="{StaticResource String.Action}">
+                <MenuItem Header="Request Control"
+                          Command="{Binding RequestControlCommand}"
+                          Visibility="{Binding CanControl,Converter={StaticResource InvertBooleanToVisibilityConverter}}" />
+                <MenuItem Header="Relinquish Control"
+                          Command="{Binding RelinquishControlCommand}"
+                          Visibility="{Binding CanControl,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </MenuItem>
         </Menu>
-        <StatusBar DockPanel.Dock="Bottom">
+        <StatusBar DockPanel.Dock="Bottom"
+                   BorderThickness="0 1 0 0"
+                   BorderBrush="{StaticResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+            <ws:ConditionalControl Condition="{Binding CanControl}">
+                <ws:ConditionalControl.ContentWhenTrue>
+                    <TextBlock Text="Control Mode"/>
+                </ws:ConditionalControl.ContentWhenTrue>
+                <ws:ConditionalControl.ContentWhenFalse>
+                    <TextBlock Text="View Mode"/>
+                </ws:ConditionalControl.ContentWhenFalse>
+            </ws:ConditionalControl>
+            <Separator Background="{StaticResource {x:Static SystemColors.ActiveBorderBrushKey}}"/>
             <ws:StackPanel Orientation="Horizontal">
                 <TextBlock Text="{StaticResource String.FrameRate}"/>
-                <TextBlock Text="{Binding FrameRate,StringFormat=': {0}'}" />
+                <TextBlock Text="{Binding FrameRate,StringFormat=': {0}',FallbackValue=': 0'}"/>
             </ws:StackPanel>
         </StatusBar>
         <controls:FrameImage x:Name="frameImage"

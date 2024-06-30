@@ -36,6 +36,11 @@
     <s:String x:Key="String.Remark">Remark</s:String>
     <s:String x:Key="String.Content.Remark">This program is completely open source and free of charge. You can download the latest version from the repository above.</s:String>
 
+    <s:String x:Key="String.Action">Action</s:String>
+    <s:String x:Key="String.Option">Option</s:String>
+    <s:String x:Key="String.Exit">Exit</s:String>
+    <s:String x:Key="String.Help">Help</s:String>
+
     <s:String x:Key="String.GrantControlPermission">Grant control permission</s:String>
     <s:String x:Key="String.Tip">Tip</s:String>
     <s:String x:Key="String.NowYouCanControl">Now you can control the remote computer.</s:String>
