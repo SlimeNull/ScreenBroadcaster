@@ -26,10 +26,10 @@
               BorderThickness="0 0 0 1"
               BorderBrush="{StaticResource {x:Static SystemColors.ActiveBorderBrushKey}}">
             <MenuItem Header="{StaticResource String.Action}">
-                <MenuItem Header="Request Control"
+                <MenuItem Header="{StaticResource String.RequestControl}"
                           Command="{Binding RequestControlCommand}"
                           Visibility="{Binding CanControl,Converter={StaticResource InvertBooleanToVisibilityConverter}}" />
-                <MenuItem Header="Relinquish Control"
+                <MenuItem Header="{StaticResource String.RelinquishControl}"
                           Command="{Binding RelinquishControlCommand}"
                           Visibility="{Binding CanControl,Converter={StaticResource BooleanToVisibilityConverter}}"/>
             </MenuItem>
@@ -39,10 +39,10 @@
                    BorderBrush="{StaticResource {x:Static SystemColors.ActiveBorderBrushKey}}">
             <ws:ConditionalControl Condition="{Binding CanControl}">
                 <ws:ConditionalControl.ContentWhenTrue>
-                    <TextBlock Text="Control Mode"/>
+                    <TextBlock Text="{StaticResource String.ControlMode}"/>
                 </ws:ConditionalControl.ContentWhenTrue>
                 <ws:ConditionalControl.ContentWhenFalse>
-                    <TextBlock Text="View Mode"/>
+                    <TextBlock Text="{StaticResource String.ViewMode}"/>
                 </ws:ConditionalControl.ContentWhenFalse>
             </ws:ConditionalControl>
             <Separator Background="{StaticResource {x:Static SystemColors.ActiveBorderBrushKey}}"/>

@@ -18,7 +18,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!--<DefineConstants>$(DefineConstants);FEATURE_SCAN</DefineConstants>-->
+    <DefineConstants>$(DefineConstants);FEATURE_SCAN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-windows|AnyCPU'">
+    <DefineConstants>$(DefineConstants);FEATURE_SCAN;QAQ</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

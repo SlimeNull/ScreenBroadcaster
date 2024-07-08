@@ -12,6 +12,7 @@
     <s:String x:Key="String.General">常规</s:String>
     <s:String x:Key="String.Address">地址</s:String>
     <s:String x:Key="String.Port">端口</s:String>
+    <s:String x:Key="String.ServersNearby">附近的服务端</s:String>
     <s:String x:Key="String.Capturing">捕捉</s:String>
     <s:String x:Key="String.CaptureMethod">捕捉方式</s:String>
     <s:String x:Key="String.Screen">屏幕</s:String>
@@ -40,7 +41,12 @@
     <s:String x:Key="String.Option">选项</s:String>
     <s:String x:Key="String.Exit">退出</s:String>
     <s:String x:Key="String.Help">帮助</s:String>
-    
+
+    <s:String x:Key="String.RequestControl">请求控制</s:String>
+    <s:String x:Key="String.RelinquishControl">放弃控制</s:String>
+    <s:String x:Key="String.ControlMode">控制模式</s:String>
+    <s:String x:Key="String.ViewMode">查看模式</s:String>
+
     <s:String x:Key="String.GrantControlPermission">授权控制</s:String>
     <s:String x:Key="String.Tip">提示</s:String>
     <s:String x:Key="String.NowYouCanControl">现在你可以控制远程计算机了.</s:String>

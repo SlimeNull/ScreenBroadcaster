@@ -403,7 +403,9 @@ public partial class MainWindow : Window
 
             ClientCanControl = null;
             BroadcastTask = Task.WhenAll(
+#if FEATURE_SCAN
                 BroadcastLoop(),
+#endif
                 NetworkLoop(),
                 CaptureLoop(),
                 StatusLoop()
@@ -509,8 +511,8 @@ public partial class MainWindow : Window
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    await Task.Delay(3000, cancellationToken);
                     await udpClient.SendAsync(broadcastMessage, broadcastMessage.Length, remoteEndPoint);
+                    await Task.Delay(3000, cancellationToken);
                 }
             }
             catch (OperationCanceledException)
@@ -1134,7 +1136,9 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
+#if FEATURE_SCAN
         _ = QueryServersLoop();
+#endif
     }
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

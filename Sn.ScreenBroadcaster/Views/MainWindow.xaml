@@ -143,6 +143,9 @@
                             <TextBlock Text="{StaticResource String.Port}" />
                             <TextBox Text="{Binding Port,UpdateSourceTrigger=PropertyChanged}"
                                      InputMethod.IsInputMethodEnabled="False"/>
+                        </StackPanel>
+                        <StackPanel Visibility="{Binding AvailableServers.Count,Converter={StaticResource NumberIsNotZeroToVisibilityConverter}}">
+                            <TextBlock Text="{StaticResource String.ServersNearby}" />
                             <ComboBox IsEditable="True"
                                       ItemsSource="{Binding AvailableServers}"/>
                         </StackPanel>
