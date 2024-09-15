@@ -45,4 +45,4 @@ Broadcasting
 ## Thanks
 
 - [ShiftMediaProject/FFmpeg](https://github.com/ShiftMediaProject/FFmpeg/)
-- [Sdcb/Sdcb.FFpeg](https://github.com/sdcb/Sdcb.FFmpeg)
+- [Sdcb/Sdcb.FFmpeg](https://github.com/sdcb/Sdcb.FFmpeg)
